@@ -1,0 +1,1 @@
+-- insertar aca los querys para la base de datos
