@@ -48,14 +48,14 @@ const Login = ()  => {
             <div>
                 <input
                 {...register("password", {
-                    required:"La contraseña es obligatoria (6 a 20 caracteres)",
+                    required:"La contraseña es obligatoria (6 a 16 caracteres)",
                     minLength:{
                         value: 6,
                         message:"Mínimo 6 caracteres"
                     },
                     maxLength:{
-                        value:20,
-                        message:"Máximo de 20 caracteres"
+                        value:16,
+                        message:"Máximo de 16 caracteres"
                     }
                 })} 
                 type="password"
