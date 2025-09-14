@@ -13,7 +13,7 @@ const Navbar = () => {
 <nav className="navbar bg-base-100 shadow-sm">
   <div className="flex-1">
     <div>
-      <Link to={"/home"} className="btn btn-ghost text-xl">Punto Tienda</Link>
+      <Link to={"/home"} className="btn btn-ghost text-xl">Trucho Tienda</Link>
     </div>
   </div>
 
