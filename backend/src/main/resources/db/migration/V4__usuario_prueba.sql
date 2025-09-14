@@ -1,0 +1,2 @@
+insert into usuarios(nombres, apellidos, email, password, telefono, idrol) VALUES ('usuario de prueba', 'Para Probar',
+                                                                                   'usuario@prueba.com', '12345', 0987654321, 1)
