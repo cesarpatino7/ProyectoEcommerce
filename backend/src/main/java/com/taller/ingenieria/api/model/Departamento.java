@@ -1,4 +1,4 @@
-package com.taller.ingenieria.api.models;
+package com.taller.ingenieria.api.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

@@ -1,4 +1,4 @@
-package com.taller.ingenieria.api.models;
+package com.taller.ingenieria.api.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
@@ -45,15 +46,16 @@ public class Usuario {
     private String password;
 
     @Column(name = "telefono")
-    private Integer telefono;
+    private String telefono;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_rol", nullable = false)
-    private Rol idRol;
+    private Rol rol;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
+    @UpdateTimestamp
     private Instant createdAt;
 
 }
