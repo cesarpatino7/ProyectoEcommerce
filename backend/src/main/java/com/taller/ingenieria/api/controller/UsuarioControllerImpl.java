@@ -1,6 +1,8 @@
 package com.taller.ingenieria.api.controller;
 
+import com.taller.ingenieria.api.dto.request.UsuarioLoginRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
+import com.taller.ingenieria.api.dto.response.UsuarioLoginResponseDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioRegistroResponseDTO;
 import com.taller.ingenieria.api.model.Usuario;
 import com.taller.ingenieria.api.service.UsuarioService;
@@ -42,5 +44,12 @@ public class UsuarioControllerImpl implements UsuarioController {
     public ResponseEntity<UsuarioPerfilResponseDTO> obtenerUsuarioPorId(@PathVariable Integer id) {
         UsuarioPerfilResponseDTO usuarioDTO = usuarioService.obtenerUsuarioPorId(id);
         return ResponseEntity.ok(usuarioDTO);
+    }
+
+    @Override
+    @PostMapping("/login")
+    public ResponseEntity<UsuarioLoginResponseDTO> loginUsuario(@RequestBody UsuarioLoginRequestDTO requestDTO) {
+        UsuarioLoginResponseDTO responseDTO = usuarioService.loginUsuario(requestDTO);
+        return ResponseEntity.ok(responseDTO);
     }
 }

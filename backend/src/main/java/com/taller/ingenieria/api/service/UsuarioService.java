@@ -1,6 +1,8 @@
 package com.taller.ingenieria.api.service;
 
+import com.taller.ingenieria.api.dto.request.UsuarioLoginRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
+import com.taller.ingenieria.api.dto.response.UsuarioLoginResponseDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioPerfilResponseDTO;
 import com.taller.ingenieria.api.model.Usuario;
 
@@ -10,4 +12,5 @@ public interface UsuarioService {
 
     UsuarioPerfilResponseDTO obtenerUsuarioPorId(Integer id);
 
+    UsuarioLoginResponseDTO loginUsuario(UsuarioLoginRequestDTO requestDTO);
 }
