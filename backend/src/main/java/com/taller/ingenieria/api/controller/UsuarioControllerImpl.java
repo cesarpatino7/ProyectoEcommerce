@@ -43,4 +43,12 @@ public class UsuarioControllerImpl implements UsuarioController {
         UsuarioPerfilResponseDTO usuarioDTO = usuarioService.obtenerUsuarioPorId(id);
         return ResponseEntity.ok(usuarioDTO);
     }
+
+    @Override
+    @GetMapping("by-email")
+    public ResponseEntity<UsuarioPerfilResponseDTO> obtenerUsuarioPorEmail(@RequestParam String email) {
+        UsuarioPerfilResponseDTO usuarioDTO = usuarioService.obtenerUsuarioPorEmail(email);
+        return ResponseEntity.ok(usuarioDTO);
+    }
+
 }

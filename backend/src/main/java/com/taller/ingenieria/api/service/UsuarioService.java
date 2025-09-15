@@ -10,4 +10,6 @@ public interface UsuarioService {
 
     UsuarioPerfilResponseDTO obtenerUsuarioPorId(Integer id);
 
+    UsuarioPerfilResponseDTO obtenerUsuarioPorEmail(String email);
+
 }

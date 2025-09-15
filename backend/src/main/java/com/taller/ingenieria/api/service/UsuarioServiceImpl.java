@@ -61,4 +61,20 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         return responseDTO;
     }
+
+    @Override
+    public UsuarioPerfilResponseDTO obtenerUsuarioPorEmail(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el email: " + email));
+
+        UsuarioPerfilResponseDTO responseDTO = new UsuarioPerfilResponseDTO();
+        responseDTO.setId(usuario.getId());
+        responseDTO.setNombre(usuario.getNombre());
+        responseDTO.setApellido(usuario.getApellido());
+        responseDTO.setEmail(usuario.getEmail());
+        responseDTO.setRol(usuario.getRol().getDescripcion());
+        responseDTO.setTelefono(Optional.ofNullable(usuario.getTelefono()).orElse(""));
+
+        return responseDTO;
+    }
 }
