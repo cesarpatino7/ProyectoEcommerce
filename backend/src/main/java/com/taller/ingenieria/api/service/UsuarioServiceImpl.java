@@ -102,15 +102,15 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     private UsuarioRegistroResponseDTO mapearAUsuarioRegistroResponseDTO(Usuario usuarioGuardado) {
-        UsuarioRegistroResponseDTO responseDTO = new UsuarioRegistroResponseDTO();
-        responseDTO.setId(usuarioGuardado.getId());
-        responseDTO.setNombre(usuarioGuardado.getNombre());
-        responseDTO.setApellido(usuarioGuardado.getApellido());
-        responseDTO.setEmail(usuarioGuardado.getEmail());
-        responseDTO.setRol(usuarioGuardado.getRol().getDescripcion());
-        responseDTO.setTelefono(Optional.ofNullable(usuarioGuardado.getTelefono()).orElse(""));
+        UsuarioRegistroResponseDTO usuarioResponse = new UsuarioRegistroResponseDTO();
+        usuarioResponse.setId(usuarioGuardado.getId());
+        usuarioResponse.setNombre(usuarioGuardado.getNombre());
+        usuarioResponse.setApellido(usuarioGuardado.getApellido());
+        usuarioResponse.setEmail(usuarioGuardado.getEmail());
+        usuarioResponse.setRol(usuarioGuardado.getRol().getDescripcion());
+        usuarioResponse.setTelefono(Optional.ofNullable(usuarioGuardado.getTelefono()).orElse(""));
 
-        return responseDTO;
+        return usuarioResponse;
     }
 
 }
