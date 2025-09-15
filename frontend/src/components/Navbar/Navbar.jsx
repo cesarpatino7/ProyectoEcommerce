@@ -15,14 +15,14 @@ const Navbar = () => {
         <div className="flex items-center gap-4 ">
           <Link
             to={"/login"}
-            className="bg-blue-950 text-white font-bold py-2 px-4  hover:scale-[1.1] transition-transform cursor-pointer"
+            className="bg-blue-950 border rounded border-blue-950 text-white font-bold py-2 px-4 hover:scale-[1.05] transition-transform cursor-pointer"
           >
             Iniciar sesión
           </Link>
 
            <Link
             to={"/register"}
-            className="font-bold text-black py-2 px-4 border hover:scale-[1.1] transition-transform cursor-pointer"
+            className="font-bold rounded text-blue-950 py-2 px-4 border hover:scale-[1.05] transition-transform cursor-pointer"
           >
             Crear cuenta
           </Link>
