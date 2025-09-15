@@ -2,6 +2,7 @@ package com.taller.ingenieria.api.service;
 
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioPerfilResponseDTO;
+import com.taller.ingenieria.api.dto.response.UsuarioRegistroResponseDTO;
 import com.taller.ingenieria.api.exception.EmailAlreadyExistsException;
 import com.taller.ingenieria.api.exception.ResourceNotFoundException;
 import com.taller.ingenieria.api.model.Rol;
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -77,4 +80,22 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         return responseDTO;
     }
+
+    @Override
+    public List<UsuarioPerfilResponseDTO> obtenerTodosLosUsuarios() {
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        List<UsuarioPerfilResponseDTO> responseDTO = new ArrayList<>();
+        for (Usuario usuario : usuarios) {
+            UsuarioPerfilResponseDTO usuarioDTO = new UsuarioPerfilResponseDTO();
+            usuarioDTO.setId(usuario.getId());
+            usuarioDTO.setNombre(usuario.getNombre());
+            usuarioDTO.setApellido(usuario.getApellido());
+            usuarioDTO.setEmail(usuario.getEmail());
+            usuarioDTO.setRol(usuario.getRol().getDescripcion());
+            usuarioDTO.setTelefono(Optional.ofNullable(usuario.getTelefono()).orElse(""));
+            responseDTO.add(usuarioDTO);
+        }
+        return responseDTO;
+    }
+
 }

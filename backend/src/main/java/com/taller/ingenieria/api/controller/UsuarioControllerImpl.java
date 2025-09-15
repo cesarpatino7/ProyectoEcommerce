@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.taller.ingenieria.api.dto.response.UsuarioPerfilResponseDTO;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -19,6 +21,14 @@ public class UsuarioControllerImpl implements UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Override
+    @GetMapping
+    public ResponseEntity<List<UsuarioPerfilResponseDTO>> obtenerTodosLosUsuarios() {
+        List<UsuarioPerfilResponseDTO> responseDTO = usuarioService.obtenerTodosLosUsuarios();
+        return ResponseEntity.ok(responseDTO);
+
+    }
 
     @Override
     @PostMapping("/registro")
