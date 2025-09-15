@@ -1,6 +1,7 @@
 package com.taller.ingenieria.api.controller;
 
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
+import com.taller.ingenieria.api.dto.request.UsuarioUpdateRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioRegistroResponseDTO;
 import com.taller.ingenieria.api.model.Usuario;
 import com.taller.ingenieria.api.service.UsuarioService;
@@ -33,17 +34,8 @@ public class UsuarioControllerImpl implements UsuarioController {
     @Override
     @PostMapping("/registro")
     public ResponseEntity<UsuarioRegistroResponseDTO> registrarUsuario(@RequestBody UsuarioRegistroRequestDTO requestDTO) {
-        Usuario usuarioGuardado = usuarioService.registrarUsuario(requestDTO);
-
-        UsuarioRegistroResponseDTO responseDTO = new UsuarioRegistroResponseDTO();
-        responseDTO.setId(usuarioGuardado.getId());
-        responseDTO.setNombre(usuarioGuardado.getNombre());
-        responseDTO.setApellido(usuarioGuardado.getApellido());
-        responseDTO.setEmail(usuarioGuardado.getEmail());
-        responseDTO.setRol(usuarioGuardado.getRol().getDescripcion());
-        responseDTO.setTelefono(Optional.ofNullable(usuarioGuardado.getTelefono()).orElse(""));
-
-        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
+        UsuarioRegistroResponseDTO usuarioDTO = usuarioService.registrarUsuario(requestDTO);
+        return new ResponseEntity<>(usuarioDTO, HttpStatus.CREATED);
     }
 
 
@@ -58,6 +50,13 @@ public class UsuarioControllerImpl implements UsuarioController {
     @GetMapping("by-email")
     public ResponseEntity<UsuarioPerfilResponseDTO> obtenerUsuarioPorEmail(@RequestParam String email) {
         UsuarioPerfilResponseDTO usuarioDTO = usuarioService.obtenerUsuarioPorEmail(email);
+        return ResponseEntity.ok(usuarioDTO);
+    }
+
+    @Override
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioPerfilResponseDTO> actualizarUsuario(@PathVariable Integer id, @RequestBody UsuarioUpdateRequestDTO requestDTO) {
+        UsuarioPerfilResponseDTO usuarioDTO = usuarioService.actualizarUsuario(id, requestDTO);
         return ResponseEntity.ok(usuarioDTO);
     }
 

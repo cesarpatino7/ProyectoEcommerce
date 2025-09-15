@@ -1,6 +1,7 @@
 package com.taller.ingenieria.api.controller;
 
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
+import com.taller.ingenieria.api.dto.request.UsuarioUpdateRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioPerfilResponseDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioRegistroResponseDTO;
 import org.apache.coyote.Response;
@@ -18,5 +19,7 @@ public interface UsuarioController {
     ResponseEntity<UsuarioPerfilResponseDTO> obtenerUsuarioPorEmail(@PathVariable String email);
 
     ResponseEntity<List<UsuarioPerfilResponseDTO>> obtenerTodosLosUsuarios();
+
+    ResponseEntity<UsuarioPerfilResponseDTO> actualizarUsuario(Integer id, UsuarioUpdateRequestDTO requestDTO);
 
 }
