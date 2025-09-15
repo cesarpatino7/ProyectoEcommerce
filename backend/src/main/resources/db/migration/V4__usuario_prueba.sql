@@ -1,2 +1,2 @@
-insert into usuarios(nombres, apellidos, email, password, telefono, idrol) VALUES ('usuario de prueba', 'Para Probar',
-                                                                                   'usuario@prueba.com', '12345', 0987654321, 1)
+INSERT INTO usuarios(nombre, apellido, email, password, telefono, id_rol)
+VALUES ('Usuario', 'Prueba', 'usuario@prueba.com', '12345', 987654321, 1);
