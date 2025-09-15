@@ -4,11 +4,13 @@ import './index.css'
 import App from './App.jsx'
 import Navbar from './components/Navbar/Navbar.jsx'
 
+
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-  <div className='w-full max-w-[1000px] mx-auto px-3.5'>
+  <div className='w-full mx-auto px-5'>
     <Navbar/>
     <App />
+    
     </div>
 </BrowserRouter>,
 )

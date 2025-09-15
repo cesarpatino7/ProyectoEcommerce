@@ -14,7 +14,7 @@ const Login = ()  => {
     return (
         <form 
         onSubmit={handleSubmit(onSubmit)}
-        className="mt-8 flex flex-col gap-4 lg:gap-6 max-w-[500px] mx-auto">
+        className="mt-8 flex flex-col gap-2 lg:gap-4 max-w-[500px] mx-auto">
             <div>
                 <input
                 {...register("email", {
@@ -75,7 +75,7 @@ const Login = ()  => {
                 }
             </div>
 
-            <button className="bg-primary cursor-pointer p-2 text-white font-bold"
+            <button className="bg-blue-950 border rounded border-blue-950 text-white font-bold py-2 px-4 hover:scale-[1.1] transition-transform cursor-pointer mx-auto w-50"
             type="submit"
             >Iniciar Sesión
             </button>

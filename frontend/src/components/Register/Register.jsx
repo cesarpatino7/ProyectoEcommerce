@@ -18,12 +18,12 @@ const Register = () => {
     return(
         <form 
             onSubmit={handleSubmit(onSubmit)}
-            className="mt-8 flex flex-col gap-4 lg:gap-6 max-w-[500px] mx-auto"
+            className="mt-8 flex flex-col gap-2 lg:gap-4 max-w-[500px] mx-auto"
         >
             <div>
                 <input 
-                {...register("username", {
-                    required: "El nombre de usuario es requerido",
+                {...register("name", {
+                    required: "El nombre es obligatorio",
                     minLength:{
                         value:3,
                         message:"El mínimo es de 3 caracteres"
@@ -34,52 +34,50 @@ const Register = () => {
                     }
                 })}
                 className={`p-2 outline-2 rounded focus:outline-blue-400 w-full ${
-                    errors.username
+                    errors.name
                     ? "border-red-400 outline-red-400 focus:outline-red-400"
                     : ""
                 }`}
-                autoComplete="username"
-                name="username"
-                placeholder="Nombre de usuario"
+                autoComplete="name"
+                name="name"
+                placeholder="Nombres"
                 type="text" />
                 {
-                    errors.username && (
-                    <p className="text-red-500 text-sm mt-2 ml-2">{errors.username.message}</p>
+                    errors.name && (
+                    <p className="text-red-500 text-sm mt-2 ml-2">{errors.name.message}</p>
+                )}
+            </div>
+            <div>
+                <input 
+                {...register("lastname", {
+                    required: "El apellido es obligatorio",
+                    minLength:{
+                        value:3,
+                        message:"El mínimo es de 3 caracteres"
+                    },
+                    maxLength:{
+                        value:16,
+                        message:"El máximo es de 16 caracteres"
+                    }
+                })}
+                className={`p-2 outline-2 rounded focus:outline-blue-400 w-full ${
+                    errors.lastname
+                    ? "border-red-400 outline-red-400 focus:outline-red-400"
+                    : ""
+                }`}
+                autoComplete="lastname"
+                name="lastname"
+                placeholder="Apellidos"
+                type="text" />
+                {
+                    errors.lastname && (
+                    <p className="text-red-500 text-sm mt-2 ml-2">{errors.lastname.message}</p>
                 )}
             </div>
             <div>
                 <input
-                {...register("password", {
-                    required:"La contraseña es obligatoria (6 a 20 caracteres)",
-                    minLength:{
-                        value: 6,
-                        message:"Mínimo 6 caracteres"
-                    },
-                    maxLength:{
-                        value:20,
-                        message:"Máximo de 20 caracteres"
-                    }
-                })} 
-                type="password"
-                placeholder="Contraseña"
-                name="password"
-                autoComplete="current-password"
-                className={`p-2 outline-2 rounded focus:outline-blue-400 w-full ${
-                    errors.password
-                    ? "border-red-400 outline-red-400 focus:outline-red-400"
-                    : ""
-                }`}
-                />
-                {
-                    errors.password && (
-                        <p className="text-red-500 text-sm mt-2 ml-2">{errors.password.message}</p>
-                    )
-                }
-            </div>
-            <div>
-                <input
                 {...register("email", {
-                    required:"El correo electrónico es requerido",
+                    required:"El correo electrónico es obligatorio",
                     pattern: {
                         value: /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/,
                         message:"Correo electrónico inválido"
@@ -106,7 +104,64 @@ const Register = () => {
                     <p className="text-red-500 text-sm mt-2 ml-2">{errors.email.message}</p>
                 )}
             </div>
-            <button className="bg-primary cursor-pointer p-2 text-white font-bold"
+            <div>
+                <input
+                {...register("password", {
+                    required:"La contraseña es obligatoria (6 a 16 caracteres)",
+                    minLength:{
+                        value: 6,
+                        message:"Mínimo 6 caracteres"
+                    },
+                    maxLength:{
+                        value:16,
+                        message:"Máximo de 16 caracteres"
+                    }
+                })} 
+                type="password"
+                placeholder="Contraseña"
+                name="password"
+                autoComplete="current-password"
+                className={`p-2 outline-2 rounded focus:outline-blue-400 w-full ${
+                    errors.password
+                    ? "border-red-400 outline-red-400 focus:outline-red-400"
+                    : ""
+                }`}
+                />
+                {
+                    errors.password && (
+                        <p className="text-red-500 text-sm mt-2 ml-2">{errors.password.message}</p>
+                    )
+                }
+            </div>
+            <div>
+                <input 
+                {...register("phonenumber", {
+                    required: "El número de teléfono es obligatorio",
+                    minLength:{
+                        value:10,
+                        message:"Debe tener 10 caracteres"
+                    },
+                    maxLength:{
+                        value:10,
+                        message:"Debe tener 10 caracteres"
+                    }
+                })}
+                className={`p-2 outline-2 rounded focus:outline-blue-400 w-full ${
+                    errors.phonenumber
+                    ? "border-red-400 outline-red-400 focus:outline-red-400"
+                    : ""
+                }`}
+                autoComplete="phonenumber"
+                name="phonenumber"
+                placeholder="Número de teléfono Ej: 09XX-XXX-XXX"
+                type="text" />
+                {
+                    errors.phonenumber && (
+                    <p className="text-red-500 text-sm mt-2 ml-2">{errors.phonenumber.message}</p>
+                )}
+            </div>
+            
+            <button className="bg-blue-950 border rounded border-blue-950 text-white font-bold py-2 px-4 hover:scale-[1.1] transition-transform cursor-pointer mx-auto w-50"
             type="submit"
             >Registrarse
             </button>
