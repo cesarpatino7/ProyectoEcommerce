@@ -60,4 +60,11 @@ public class UsuarioControllerImpl implements UsuarioController {
         return ResponseEntity.ok(usuarioDTO);
     }
 
+    @Override
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable Integer id) {
+        usuarioService.eliminarUsuario(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

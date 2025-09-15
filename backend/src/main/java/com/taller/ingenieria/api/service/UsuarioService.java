@@ -19,4 +19,6 @@ public interface UsuarioService {
     List<UsuarioPerfilResponseDTO> obtenerTodosLosUsuarios();
 
     UsuarioPerfilResponseDTO actualizarUsuario(Integer id, UsuarioUpdateRequestDTO requestDTO);
+
+    void eliminarUsuario(Integer id);
 }

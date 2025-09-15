@@ -22,4 +22,6 @@ public interface UsuarioController {
 
     ResponseEntity<UsuarioPerfilResponseDTO> actualizarUsuario(Integer id, UsuarioUpdateRequestDTO requestDTO);
 
+    ResponseEntity<Void> eliminarUsuario(Integer id);
+
 }

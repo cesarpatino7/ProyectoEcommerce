@@ -90,6 +90,14 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     }
 
+    @Override
+    public void eliminarUsuario(Integer id) {
+        Usuario usuarioExistente = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se puede eliminar. Usuario no encontrado con id: " + id));
+
+        usuarioRepository.delete(usuarioExistente);
+    }
+
     private UsuarioPerfilResponseDTO mapearAUsuarioPerfilResponseDTO(Usuario usuario) {
         UsuarioPerfilResponseDTO usuarioResponse = new UsuarioPerfilResponseDTO();
         usuarioResponse.setNombre(usuario.getNombre());
