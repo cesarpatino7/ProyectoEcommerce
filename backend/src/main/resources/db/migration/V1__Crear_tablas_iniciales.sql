@@ -26,7 +26,7 @@ CREATE TABLE usuarios (
                           apellido VARCHAR(50) NOT NULL,
                           email VARCHAR(100) NOT NULL UNIQUE,
                           password VARCHAR(255) NOT NULL,
-                          telefono INT,
+                          telefono VARCHAR(255),
                           id_rol INT NOT NULL,
                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                           CONSTRAINT fk_usuarios_roles FOREIGN KEY (id_rol)
