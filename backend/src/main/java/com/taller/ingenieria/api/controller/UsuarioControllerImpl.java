@@ -5,7 +5,6 @@ import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioUpdateRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioLoginResponseDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioRegistroResponseDTO;
-import com.taller.ingenieria.api.model.Usuario;
 import com.taller.ingenieria.api.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,9 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.taller.ingenieria.api.dto.response.UsuarioPerfilResponseDTO;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 
 @RestController

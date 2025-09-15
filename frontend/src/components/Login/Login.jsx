@@ -35,7 +35,13 @@ const Login = ()  => {
                 setMensajeError("")
                 setMensajeExito("✅ Inicio de sesión exitoso, redirigiendo...")
                 setTimeout(() => {
-                    navigate("/")
+
+                    if (userData.rol === "Administrador") {
+                        navigate("/admin")
+                    } else {
+                        navigate("/")
+                    }
+
                 }, 1500)
             } else {
                 const errorData = await response.json()

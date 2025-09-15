@@ -4,6 +4,7 @@ import RegisterPage from "./pages/RegisterPage"
 import LoginPage from "./pages/LoginPage"
 import HealthCheck from "./components/Home/HealthCheck"
 import Navbar2 from "./components/Navbar/Navbar2"
+import CRUDPage from "./pages/CRUDPage.jsx";
 
 function App() {
     return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/register" element={<RegisterPage/>} />
         <Route path="/login" element={<LoginPage/>} />
         <Route path="/healthcheck" element={<HealthCheck/>} />
+        <Route path="/admin" element={<CRUDPage/>} />
       </Routes>
       </>
   )
