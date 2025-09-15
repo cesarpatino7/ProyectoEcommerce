@@ -1,4 +1,6 @@
 import { useForm } from "react-hook-form"
+import { useNavigate } from "react-router-dom"
+import { useState } from "react"
 
 const Login = ()  => {
     const { register, 
@@ -6,12 +8,60 @@ const Login = ()  => {
         formState: {errors}, 
         reset}= useForm({mode:"onChange"})
 
-    const onSubmit = (data) => {
-        console.log(data)
-        reset()
+    const navigate = useNavigate()
+    const [mensajeError, setMensajeError] = useState("")
+    const [mensajeExito, setMensajeExito] = useState("")
+    
+    const onSubmit = async (data) => {
+        try {
+            const response = await fetch("http://localhost:8080/api/v1/usuarios/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: data.email,
+                    password: data.password
+                })
+            })
+
+            if (response.ok) {
+                const userData = await response.json()
+                localStorage.setItem("usuario", JSON.stringify(userData)) // Guarda sesión
+
+                window.dispatchEvent(new Event('userLogin'))
+
+                reset()
+                setMensajeError("")
+                setMensajeExito("✅ Inicio de sesión exitoso, redirigiendo...")
+                setTimeout(() => {
+                    navigate("/")
+                }, 1500)
+            } else {
+                const errorData = await response.json()
+                setMensajeExito("")
+                setMensajeError(/*errorData.message || */"❌ Credenciales inválidas")
+            }
+        } catch (err) {
+            setMensajeExito("")
+            setMensajeError("⚠️ Error de conexión con el servidor")
+        }
     }
 
+
     return (
+        <>
+        {mensajeExito && (
+                <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded shadow">
+                    {mensajeExito}
+                </div>
+        )}
+
+        {mensajeError && (
+                <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded shadow">
+                    {mensajeError}
+                </div>
+        )}
         <form 
         onSubmit={handleSubmit(onSubmit)}
         className="mt-8 flex flex-col gap-2 lg:gap-4 max-w-[500px] mx-auto">
@@ -80,7 +130,7 @@ const Login = ()  => {
             >Iniciar Sesión
             </button>
         </form>
-
+        </>       
     )
 }
 

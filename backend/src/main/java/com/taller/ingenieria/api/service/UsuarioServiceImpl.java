@@ -1,6 +1,8 @@
 package com.taller.ingenieria.api.service;
 
+import com.taller.ingenieria.api.dto.request.UsuarioLoginRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
+import com.taller.ingenieria.api.dto.response.UsuarioLoginResponseDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioUpdateRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioPerfilResponseDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioRegistroResponseDTO;
@@ -72,6 +74,24 @@ public class UsuarioServiceImpl implements UsuarioService {
         for (Usuario usuario : usuarios) {
             responseDTO.add(mapearAUsuarioPerfilResponseDTO(usuario));
         }
+        return responseDTO;
+    }
+
+    @Override
+    public UsuarioLoginResponseDTO loginUsuario(UsuarioLoginRequestDTO requestDTO) {
+        Usuario usuario = usuarioRepository.findByEmail(requestDTO.getEmail()).orElse(null);
+
+        if (usuario == null || !passwordEncoder.matches(requestDTO.getPassword(), usuario.getPassword())) {
+            throw new IllegalArgumentException("Credenciales inválidas");
+        }
+
+        UsuarioLoginResponseDTO responseDTO = new UsuarioLoginResponseDTO();
+        responseDTO.setId(usuario.getId());
+        responseDTO.setNombre(usuario.getNombre());
+        responseDTO.setApellido(usuario.getApellido());
+        responseDTO.setEmail(usuario.getEmail());
+        responseDTO.setRol(usuario.getRol().getDescripcion());
+
         return responseDTO;
     }
 
