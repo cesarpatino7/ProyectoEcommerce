@@ -92,7 +92,6 @@ const CRUDPage = () => {
     <div className="p-4 md:p-8">
       <h1 className="text-3xl font-bold mb-6">Gestión de Usuarios</h1>
 
-      {/* 4. Pasamos la lista YA FILTRADA al componente de la tabla */}
       <UserTable
         users={filteredUsers}
         onEdit={handleEditClick}
