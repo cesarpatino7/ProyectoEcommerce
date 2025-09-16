@@ -48,7 +48,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         nuevoUsuario.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
         nuevoUsuario.setRol(rolUsuario);
 
-         return mapearAUsuarioRegistroResponseDTO(usuarioRepository.save(nuevoUsuario));
+        return mapearAUsuarioRegistroResponseDTO(usuarioRepository.save(nuevoUsuario));
     }
 
     @Override
@@ -104,10 +104,15 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioExistente.setApellido(requestDTO.getApellido());
         usuarioExistente.setTelefono(requestDTO.getTelefono());
 
+        if (requestDTO.getRol() != null) {
+            Rol rol = rolRepository.findByDescripcion(requestDTO.getRol())
+                    .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + requestDTO.getRol()));
+            usuarioExistente.setRol(rol);
+        }
+
         Usuario usuarioActualizado = usuarioRepository.save(usuarioExistente);
 
         return mapearAUsuarioPerfilResponseDTO(usuarioActualizado);
-
     }
 
     @Override
