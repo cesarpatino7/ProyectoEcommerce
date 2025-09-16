@@ -1,168 +1,113 @@
-import { useEffect, useState } from "react"
+import React, { useState, useEffect } from "react";
+import UserTable from "../components/userTable";
+import EditUserModal from "../components/EditUserModal";
 
-const UsuariosAdmin = () => {
-    const [usuarios, setUsuarios] = useState([])
-    const [formData, setFormData] = useState({
-        nombre: "",
-        apellido: "",
-        email: "",
-        rol: "Cliente",
-        telefono: ""
-    })
-    const [modoEdicion, setModoEdicion] = useState(false)
-    const [usuarioEditando, setUsuarioEditando] = useState(null)
-    const [cargando, setCargando] = useState(true)
+const CRUDPage = () => {
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    const fetchUsuarios = async () => {
-        try {
-            const res = await fetch("http://localhost:8080/api/v1/usuarios")
-            const data = await res.json()
-            setUsuarios(data)
-        } catch (error) {
-            console.error("Error al obtener usuarios:", error)
-        } finally {
-            setCargando(false)
-        }
+  const API_URL = "http://localhost:8080/api/v1/usuarios";
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(API_URL);
+      if (!response.ok)
+        throw new Error("Error al obtener la lista de usuarios.");
+      const data = await response.json();
+      setUsers(data);
+      setError("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    useEffect(() => {
-        fetchUsuarios()
-    }, [])
-
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value })
+  useEffect(() => {
+    const loggedInUser = localStorage.getItem("usuario");
+    if (loggedInUser) {
+      setCurrentUser(JSON.parse(loggedInUser));
     }
+    fetchUsers();
+  }, []);
 
-    const handleEditar = (usuario) => {
-        setFormData({
-            nombre: usuario.nombre,
-            apellido: usuario.apellido,
-            email: usuario.email,
-            rol: usuario.rol,
-            telefono: usuario.telefono || ""
-        })
-        setModoEdicion(true)
-        setUsuarioEditando(usuario)
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleEditClick = (user) => {
+    setSelectedUser(user);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedUser(null);
+  };
+
+  const handleUpdateUser = async (updatedUserData) => {
+    try {
+      const response = await fetch(`${API_URL}/${selectedUser.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedUserData),
+      });
+      if (!response.ok) throw new Error("Error al actualizar el usuario.");
+      handleCloseModal();
+      fetchUsers();
+    } catch (err) {
+      setError(err.message);
     }
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        if (!usuarioEditando) return
-
-        try {
-            const res = await fetch(`http://localhost:8080/api/v1/usuarios/${usuarioEditando.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData)
-            })
-
-            if (res.ok) {
-                fetchUsuarios()
-                setFormData({
-                    nombre: "",
-                    apellido: "",
-                    email: "",
-                    rol: "Cliente",
-                    telefono: ""
-                })
-                setModoEdicion(false)
-                setUsuarioEditando(null)
-            } else {
-                console.error("Error al actualizar usuario")
-            }
-        } catch (error) {
-            console.error("Error de conexión:", error)
-        }
+  const handleDeleteClick = async (userId) => {
+    if (window.confirm("¿Estás seguro?")) {
+      try {
+        const response = await fetch(`${API_URL}/${userId}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) throw new Error("Error al eliminar el usuario.");
+        fetchUsers();
+      } catch (err) {
+        setError(err.message);
+      }
     }
+  };
 
-    const handleEliminar = async (id) => {
-        const confirmar = window.confirm("¿Estás seguro de que deseas eliminar este usuario?")
-        if (!confirmar) return
+  const filteredUsers = currentUser
+    ? users.filter((user) => user.id !== currentUser.id)
+    : users;
 
-        try {
-            const res = await fetch(`http://localhost:8080/api/v1/usuarios/${id}`, {
-                method: "DELETE"
-            })
-
-            if (res.ok) {
-                fetchUsuarios()
-            } else {
-                console.error("Error al eliminar usuario")
-            }
-        } catch (error) {
-            console.error("Error de conexión:", error)
-        }
-    }
-
+  if (loading)
     return (
-        <div className="p-4">
-            <h2 className="text-2xl font-bold mb-4">Gestión de Usuarios</h2>
+      <div className="p-8">
+        <span className="loading loading-spinner"></span> Cargando...
+      </div>
+    );
+  if (error) return <div className="p-8 text-error">{error}</div>;
 
-            {modoEdicion && (
-                <form onSubmit={handleSubmit} className="mb-6 flex flex-col gap-2 max-w-md">
-                    <h3 className="text-lg font-semibold">Editar Usuario</h3>
-                    <input name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" required />
-                    <input name="apellido" value={formData.apellido} onChange={handleChange} placeholder="Apellido" required />
-                    <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" required />
-                    <input name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Teléfono" />
-                    <select name="rol" value={formData.rol} onChange={handleChange}>
-                        <option value="Cliente">Cliente</option>
-                        <option value="Administrador">Administrador</option>
-                    </select>
-                    <div className="flex gap-2">
-                        <button type="submit" className="bg-blue-600 text-white py-2 px-4 rounded">
-                            Actualizar
-                        </button>
-                        <button type="button" onClick={() => {
-                            setModoEdicion(false)
-                            setUsuarioEditando(null)
-                            setFormData({
-                                nombre: "",
-                                apellido: "",
-                                email: "",
-                                rol: "Cliente",
-                                telefono: ""
-                            })
-                        }} className="bg-gray-400 text-white py-2 px-4 rounded">
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
-            )}
+  return (
+    <div className="p-4 md:p-8">
+      <h1 className="text-3xl font-bold mb-6">Gestión de Usuarios</h1>
 
-            {cargando ? (
-                <p>Cargando usuarios...</p>
-            ) : (
-                <table className="w-full border">
-                    <thead className="bg-gray-100">
-                    <tr>
-                        <th className="p-2 border">Nombre</th>
-                        <th className="p-2 border">Apellido</th>
-                        <th className="p-2 border">Email</th>
-                        <th className="p-2 border">Rol</th>
-                        <th className="p-2 border">Teléfono</th>
-                        <th className="p-2 border">Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {usuarios.map((u) => (
-                        <tr key={u.id} className="border-t">
-                            <td className="p-2 border">{u.nombre}</td>
-                            <td className="p-2 border">{u.apellido}</td>
-                            <td className="p-2 border">{u.email}</td>
-                            <td className="p-2 border">{u.rol}</td>
-                            <td className="p-2 border">{u.telefono || "—"}</td>
-                            <td className="p-2 border">
-                                <button onClick={() => handleEditar(u)} className="text-blue-600 mr-2">Editar</button>
-                                <button onClick={() => handleEliminar(u.id)} className="text-red-600">Eliminar</button>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            )}
-        </div>
-    )
-}
+      {/* 4. Pasamos la lista YA FILTRADA al componente de la tabla */}
+      <UserTable
+        users={filteredUsers}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+      />
 
-export default UsuariosAdmin
+      {selectedUser && (
+        <EditUserModal
+          user={selectedUser}
+          onUpdate={handleUpdateUser}
+          onClose={handleCloseModal}
+        />
+      )}
+    </div>
+  );
+};
+
+export default CRUDPage;
