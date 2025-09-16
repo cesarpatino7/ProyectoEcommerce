@@ -1,27 +1,38 @@
 import React, { useState, useEffect } from "react";
 import UserTable from "../components/userTable";
 import EditUserModal from "../components/EditUserModal";
+import RegisterAdminModal from "../components/registerAdminModal";
+import Notification from "../components/Notification";
 
 const CRUDPage = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
+  });
 
   const API_URL = "http://localhost:8080/api/v1/usuarios";
+
+  const showNotification = (message, type = "error") => {
+    setNotification({ show: true, message, type });
+  };
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const response = await fetch(API_URL);
-      if (!response.ok)
+      if (!response.ok) {
         throw new Error("Error al obtener la lista de usuarios.");
+      }
       const data = await response.json();
       setUsers(data);
-      setError("");
     } catch (err) {
-      setError(err.message);
+      showNotification(err.message);
     } finally {
       setLoading(false);
     }
@@ -35,44 +46,59 @@ const CRUDPage = () => {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const handleEditClick = (user) => {
-    setSelectedUser(user);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedUser(null);
-  };
-
-  const handleUpdateUser = async (updatedUserData) => {
+  const handleUpdateUser = async (data) => {
     try {
       const response = await fetch(`${API_URL}/${selectedUser.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedUserData),
+        body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Error al actualizar el usuario.");
-      handleCloseModal();
+      if (!response.ok) {
+        throw new Error("Error al actualizar el usuario.");
+      }
+      setSelectedUser(null);
       fetchUsers();
+      showNotification("Usuario actualizado con éxito.", "success");
     } catch (err) {
-      setError(err.message);
+      showNotification(err.message);
     }
   };
 
   const handleDeleteClick = async (userId) => {
-    if (window.confirm("¿Estás seguro?")) {
+    if (window.confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
       try {
         const response = await fetch(`${API_URL}/${userId}`, {
           method: "DELETE",
         });
-        if (!response.ok) throw new Error("Error al eliminar el usuario.");
+        if (!response.ok) {
+          throw new Error("Error al eliminar el usuario.");
+        }
         fetchUsers();
+        showNotification("Usuario eliminado con éxito.", "success");
       } catch (err) {
-        setError(err.message);
+        showNotification(err.message);
       }
+    }
+  };
+
+  const handleRegisterAdmin = async (data) => {
+    try {
+      const response = await fetch(`${API_URL}/registro-admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const responseData = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          responseData.message || "Error al registrar administrador."
+        );
+      }
+      setIsRegisterModalOpen(false);
+      fetchUsers();
+      showNotification("Administrador registrado con éxito.", "success");
+    } catch (err) {
+      showNotification(err.message);
     }
   };
 
@@ -80,21 +106,39 @@ const CRUDPage = () => {
     ? users.filter((user) => user.id !== currentUser.id)
     : users;
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="p-8">
+      <div className="p-8 flex justify-center items-center">
         <span className="loading loading-spinner"></span> Cargando...
       </div>
     );
-  if (error) return <div className="p-8 text-error">{error}</div>;
+  }
 
   return (
     <div className="p-4 md:p-8">
-      <h1 className="text-3xl font-bold mb-6">Gestión de Usuarios</h1>
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() =>
+            setNotification({ show: false, message: "", type: "" })
+          }
+        />
+      )}
+
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
+        <button
+          onClick={() => setIsRegisterModalOpen(true)}
+          className="btn btn-primary"
+        >
+          Registrar Admin
+        </button>
+      </div>
 
       <UserTable
         users={filteredUsers}
-        onEdit={handleEditClick}
+        onEdit={setSelectedUser}
         onDelete={handleDeleteClick}
       />
 
@@ -102,7 +146,14 @@ const CRUDPage = () => {
         <EditUserModal
           user={selectedUser}
           onUpdate={handleUpdateUser}
-          onClose={handleCloseModal}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
+
+      {isRegisterModalOpen && (
+        <RegisterAdminModal
+          onRegister={handleRegisterAdmin}
+          onClose={() => setIsRegisterModalOpen(false)}
         />
       )}
     </div>
