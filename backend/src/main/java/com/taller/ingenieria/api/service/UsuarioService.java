@@ -25,4 +25,6 @@ public interface UsuarioService {
     UsuarioPerfilResponseDTO actualizarUsuario(Integer id, UsuarioUpdateRequestDTO requestDTO);
 
     void eliminarUsuario(Integer id);
+
+    Usuario registrarAdmin(UsuarioRegistroRequestDTO requestDTO);
 }

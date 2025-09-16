@@ -28,4 +28,6 @@ public interface UsuarioController {
 
     ResponseEntity<UsuarioLoginResponseDTO> loginUsuario(UsuarioLoginRequestDTO requestDTO);
 
+    ResponseEntity<UsuarioPerfilResponseDTO> registrarAdmin(UsuarioRegistroRequestDTO requestDTO);
+
 }

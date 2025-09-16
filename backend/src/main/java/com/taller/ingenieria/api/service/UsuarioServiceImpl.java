@@ -118,6 +118,26 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioRepository.delete(usuarioExistente);
     }
 
+    @Override
+    public Usuario registrarAdmin(UsuarioRegistroRequestDTO requestDTO) {
+        if (usuarioRepository.findByEmail(requestDTO.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException("El email '" + requestDTO.getEmail() + "' ya se encuentra registrado.");
+        }
+
+        Rol rolAdmin = rolRepository.findById(1)
+                .orElseThrow(() -> new ResourceNotFoundException("Rol 'ADMINISTRADOR' no encontrado."));
+
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setNombre(requestDTO.getNombre());
+        nuevoUsuario.setApellido(requestDTO.getApellido());
+        nuevoUsuario.setEmail(requestDTO.getEmail());
+        nuevoUsuario.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
+        System.out.println(rolAdmin);
+        nuevoUsuario.setRol(rolAdmin);
+
+        return usuarioRepository.save(nuevoUsuario);
+    }
+
     private UsuarioPerfilResponseDTO mapearAUsuarioPerfilResponseDTO(Usuario usuario) {
         UsuarioPerfilResponseDTO usuarioResponse = new UsuarioPerfilResponseDTO();
         usuarioResponse.setNombre(usuario.getNombre());
