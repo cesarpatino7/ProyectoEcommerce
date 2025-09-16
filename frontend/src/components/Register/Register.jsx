@@ -30,9 +30,9 @@ const Register = () => {
                 console.log("✅ Usuario registrado:", usuario);
 
                 reset(); // limpiar formulario
-                setMensajeExito("¡Registrado correctamente, de vuelta a la pagina principal...");
+                setMensajeExito("¡Registrado correctamente, Inicie sesión...");
                 setTimeout(() => {
-                    navigate("/");
+                    navigate("/login");
                 }, 3000);
             } else {
                 const error = await response.json();
