@@ -34,4 +34,13 @@ public interface UsuarioService {
      * @return El DTO con la información del perfil del usuario.
      */
     UsuarioPerfilResponseDTO obtenerMiPerfil();
+
+    /**
+     * Actualiza los datos personales (nombre, apellido, teléfono) del usuario
+     * autenticado actualmente en la sesión.
+     *
+     * @param requestDTO El DTO con la nueva información.
+     * @return El DTO del perfil del usuario con los datos ya actualizados.
+     */
+    UsuarioPerfilResponseDTO actualizarMiPerfil(UsuarioUpdateRequestDTO requestDTO);
 }

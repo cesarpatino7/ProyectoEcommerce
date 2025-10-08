@@ -154,6 +154,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         return obtenerUsuarioPorEmail(userEmail);
     }
 
+    @Override
+    public UsuarioPerfilResponseDTO actualizarMiPerfil(UsuarioUpdateRequestDTO requestDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String userEmail = userDetails.getUsername();
+
+        Usuario usuarioActual = usuarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado para el token proporcionado."));
+
+        return this.actualizarUsuario(usuarioActual.getId(), requestDTO);
+    }
+
     private UsuarioPerfilResponseDTO mapearAUsuarioPerfilResponseDTO(Usuario usuario) {
         UsuarioPerfilResponseDTO usuarioResponse = new UsuarioPerfilResponseDTO();
         usuarioResponse.setNombre(usuario.getNombre());
