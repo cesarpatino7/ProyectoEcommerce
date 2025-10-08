@@ -1,5 +1,6 @@
 package com.taller.ingenieria.api.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -33,5 +34,35 @@ public class GlobalExceptionHandler {
         body.put("timestamp", System.currentTimeMillis());
         body.put("message", ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Object> handleDatabaseExceptions(DataIntegrityViolationException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", System.currentTimeMillis());
+
+        Throwable rootCause = ex.getRootCause();
+        String message = "Error en la base de datos.";
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        if (rootCause != null && rootCause.getMessage() != null) {
+            String rootMessage = rootCause.getMessage();
+
+            if (rootMessage.contains("Stock insuficiente para el producto seleccionado.")) {
+                message = "No hay suficiente stock para uno de los productos.";
+                status = HttpStatus.CONFLICT;
+            } else if (rootMessage.contains("El producto ya existe en el carrito.")) {
+                message = "Este producto ya ha sido añadido a tu carrito.";
+                status = HttpStatus.CONFLICT;
+            } else if (rootMessage.contains("violates foreign key constraint")) {
+                message = "La operación no se puede realizar debido a una referencia a datos inexistentes.";
+                status = HttpStatus.BAD_REQUEST;
+            }
+        }
+
+        body.put("message", message);
+        body.put("error", status.getReasonPhrase());
+
+        return new ResponseEntity<>(body, status);
     }
 }
