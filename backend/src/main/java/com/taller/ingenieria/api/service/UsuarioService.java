@@ -27,4 +27,11 @@ public interface UsuarioService {
     void eliminarUsuario(Integer id);
 
     Usuario registrarAdmin(UsuarioRegistroRequestDTO requestDTO);
+
+    /**
+     * Obtiene el perfil del usuario actualmente autenticado a partir del contexto de seguridad.
+     *
+     * @return El DTO con la información del perfil del usuario.
+     */
+    UsuarioPerfilResponseDTO obtenerMiPerfil();
 }

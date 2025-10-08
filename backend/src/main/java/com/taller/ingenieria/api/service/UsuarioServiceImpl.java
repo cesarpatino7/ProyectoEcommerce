@@ -13,6 +13,9 @@ import com.taller.ingenieria.api.model.Usuario;
 import com.taller.ingenieria.api.repository.RolRepository;
 import com.taller.ingenieria.api.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -136,6 +139,19 @@ public class UsuarioServiceImpl implements UsuarioService {
         nuevoUsuario.setRol(rolAdmin);
 
         return usuarioRepository.save(nuevoUsuario);
+    }
+
+    @Override
+    public UsuarioPerfilResponseDTO obtenerMiPerfil() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("No hay un usuario autenticado en la sesión.");
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String userEmail = userDetails.getUsername();
+
+        return obtenerUsuarioPorEmail(userEmail);
     }
 
     private UsuarioPerfilResponseDTO mapearAUsuarioPerfilResponseDTO(Usuario usuario) {
