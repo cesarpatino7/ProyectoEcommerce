@@ -10,4 +10,5 @@ public class UsuarioLoginResponseDTO {
     private String email;
     private String rol;
     private String telefono;
+    private String token;
 }
