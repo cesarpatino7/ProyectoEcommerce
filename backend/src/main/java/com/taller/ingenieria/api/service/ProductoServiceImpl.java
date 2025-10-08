@@ -1,5 +1,7 @@
 package com.taller.ingenieria.api.service;
 
+import com.taller.ingenieria.api.dto.request.ProductoCatalogoDTO;
+import com.taller.ingenieria.api.dto.request.ProductoDetalleDTO;
 import com.taller.ingenieria.api.dto.request.ProductoRequestDTO;
 import com.taller.ingenieria.api.dto.response.ProductoResponseDTO;
 import com.taller.ingenieria.api.exception.ResourceNotFoundException;
@@ -7,8 +9,11 @@ import com.taller.ingenieria.api.model.*;
 import com.taller.ingenieria.api.model.id.ProductoCategoriaId;
 import com.taller.ingenieria.api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -18,10 +23,16 @@ import java.util.stream.Collectors;
 @Service
 public class ProductoServiceImpl implements ProductoService {
 
+    // --- Repositorios de Administración ---
     @Autowired private ProductoRepository productoRepository;
     @Autowired private CategoriaRepository categoriaRepository;
     @Autowired private ImagenRepository imagenRepository;
     @Autowired private ProductoCategoriaRepository productoCategoriaRepository;
+
+    // --- Repositorios de Vistas (Cliente) ---
+    @Autowired private ProductoSimpleViewRepository productoSimpleViewRepository;
+    @Autowired private ProductoDetalleViewRepository productoDetalleViewRepository;
+
 
     @Override
     @Transactional
@@ -35,10 +46,8 @@ public class ProductoServiceImpl implements ProductoService {
 
         Producto productoGuardado = productoRepository.save(producto);
 
-        // Lógica para asignar categorías
         asignarCategorias(productoGuardado, productoDTO);
 
-        // Lógica para guardar imágenes
         guardarImagenes(productoGuardado, productoDTO);
 
         return obtenerProductoPorId(productoGuardado.getId());
@@ -85,6 +94,28 @@ public class ProductoServiceImpl implements ProductoService {
             throw new ResourceNotFoundException("Producto no encontrado con id: " + id);
         }
         productoRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<ProductoCatalogoDTO> obtenerCatalogo(Pageable pageable, String busqueda, String categoria) {
+        Page<ProductoSimpleView> paginaDeProductos;
+
+        if (StringUtils.hasText(busqueda)) {
+            paginaDeProductos = productoSimpleViewRepository.findByNombreContainingIgnoreCase(busqueda, pageable);
+        } else if (StringUtils.hasText(categoria)) {
+            paginaDeProductos = productoSimpleViewRepository.findByCategoria(categoria, pageable);
+        } else {
+            paginaDeProductos = productoSimpleViewRepository.findAll(pageable);
+        }
+
+        return paginaDeProductos.map(this::convertirAProductoCatalogoDTO);
+    }
+
+    @Override
+    public ProductoDetalleDTO obtenerProductoDetalle(Integer id) {
+        ProductoDetalleView productoView = productoDetalleViewRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
+        return convertirAProductoDetalleDTO(productoView);
     }
 
 
@@ -138,6 +169,28 @@ public class ProductoServiceImpl implements ProductoService {
                 .collect(Collectors.toList());
         dto.setImagenes(urlsImagenes);
 
+        return dto;
+    }
+
+    private ProductoCatalogoDTO convertirAProductoCatalogoDTO(ProductoSimpleView view) {
+        ProductoCatalogoDTO dto = new ProductoCatalogoDTO();
+        dto.setId(view.getIdProducto());
+        dto.setNombre(view.getNombre());
+        dto.setPrecio(view.getPrecio());
+        dto.setCalificacionPromedio(view.getCalificacionPromedio());
+        dto.setImagen(view.getImagen());
+        return dto;
+    }
+
+    private ProductoDetalleDTO convertirAProductoDetalleDTO(ProductoDetalleView view) {
+        ProductoDetalleDTO dto = new ProductoDetalleDTO();
+        dto.setId(view.getIdProducto());
+        dto.setNombre(view.getNombre());
+        dto.setDescripcion(view.getDescripcion());
+        dto.setPrecio(view.getPrecio());
+        dto.setStockActual(view.getStockActual());
+        dto.setCategorias(view.getCategorias());
+        dto.setImagenes(view.getImagenes());
         return dto;
     }
 

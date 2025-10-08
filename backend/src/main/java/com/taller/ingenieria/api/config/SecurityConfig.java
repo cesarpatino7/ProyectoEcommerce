@@ -4,6 +4,7 @@ import com.taller.ingenieria.api.security.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -45,8 +46,10 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/api/v1/usuarios/registro",
-                                "/api/v1/usuarios/login"
+                                "/api/v1/usuarios/login",
+                                "/api/v1/productos/**"
                         ).permitAll()
+                        .requestMatchers("/api/v1/admin/**", "/api/v1/me/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

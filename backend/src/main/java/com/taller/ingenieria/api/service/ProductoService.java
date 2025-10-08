@@ -1,7 +1,11 @@
 package com.taller.ingenieria.api.service;
 
+import com.taller.ingenieria.api.dto.request.ProductoCatalogoDTO;
+import com.taller.ingenieria.api.dto.request.ProductoDetalleDTO;
 import com.taller.ingenieria.api.dto.request.ProductoRequestDTO;
 import com.taller.ingenieria.api.dto.response.ProductoResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -11,4 +15,7 @@ public interface ProductoService {
     ProductoResponseDTO obtenerProductoPorId(Integer id);
     ProductoResponseDTO actualizarProducto(Integer id, ProductoRequestDTO productoDTO);
     void eliminarProducto(Integer id);
+
+    Page<ProductoCatalogoDTO> obtenerCatalogo(Pageable pageable, String busqueda, String categoria);
+    ProductoDetalleDTO obtenerProductoDetalle(Integer id);
 }
