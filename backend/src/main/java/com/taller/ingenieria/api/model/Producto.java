@@ -42,7 +42,7 @@ public class Producto {
     private Boolean activo = false;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
 }
