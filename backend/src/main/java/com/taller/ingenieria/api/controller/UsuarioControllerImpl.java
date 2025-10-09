@@ -81,19 +81,5 @@ public class UsuarioControllerImpl implements UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    @Override
-    @PostMapping("/registro-admin")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
-    public ResponseEntity<UsuarioPerfilResponseDTO> registrarAdmin(@RequestBody UsuarioRegistroRequestDTO requestDTO) {
-        Usuario usuario = usuarioService.registrarAdmin(requestDTO);
-        UsuarioPerfilResponseDTO usuarioResponse = new UsuarioPerfilResponseDTO();
-        usuarioResponse.setNombre(usuario.getNombre());
-        usuarioResponse.setApellido(usuario.getApellido());
-        usuarioResponse.setId(usuario.getId());
-        usuarioResponse.setEmail(usuario.getEmail());
-        usuarioResponse.setRol(usuario.getRol().getDescripcion());
-        usuarioResponse.setTelefono(Optional.ofNullable(usuario.getTelefono()).orElse(""));
-        return new ResponseEntity<>(usuarioResponse, HttpStatus.CREATED);
-    }
 
 }

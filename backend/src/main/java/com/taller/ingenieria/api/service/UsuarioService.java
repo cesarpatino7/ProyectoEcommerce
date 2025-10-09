@@ -1,5 +1,6 @@
 package com.taller.ingenieria.api.service;
 
+import com.taller.ingenieria.api.dto.request.AdminUsuarioCreateRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioLoginRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioLoginResponseDTO;
@@ -26,8 +27,6 @@ public interface UsuarioService {
 
     void eliminarUsuario(Integer id);
 
-    Usuario registrarAdmin(UsuarioRegistroRequestDTO requestDTO);
-
     /**
      * Obtiene el perfil del usuario actualmente autenticado a partir del contexto de seguridad.
      *
@@ -43,4 +42,12 @@ public interface UsuarioService {
      * @return El DTO del perfil del usuario con los datos ya actualizados.
      */
     UsuarioPerfilResponseDTO actualizarMiPerfil(UsuarioUpdateRequestDTO requestDTO);
+
+    /**
+     * Crea un nuevo usuario con un rol específico.
+     * Usado por administradores para crear otros usuarios con roles administrativos.
+     * @param requestDTO Datos del usuario a crear, incluyendo el id del rol.
+     * @return El perfil del usuario recién creado.
+     */
+    UsuarioPerfilResponseDTO crearUsuarioAdmin(AdminUsuarioCreateRequestDTO requestDTO);
 }

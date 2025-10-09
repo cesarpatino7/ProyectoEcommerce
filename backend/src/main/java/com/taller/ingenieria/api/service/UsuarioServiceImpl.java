@@ -1,5 +1,6 @@
 package com.taller.ingenieria.api.service;
 
+import com.taller.ingenieria.api.dto.request.AdminUsuarioCreateRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioLoginRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioLoginResponseDTO;
@@ -41,8 +42,8 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new EmailAlreadyExistsException("El email '" + requestDTO.getEmail() + "' ya se encuentra registrado.");
         }
 
-        Rol rolUsuario = rolRepository.findByDescripcion("Cliente")
-                .orElseThrow(() -> new ResourceNotFoundException("Error: Rol 'Cliente' no encontrado."));
+        Rol rolUsuario = rolRepository.findByDescripcion("ROLE_CUSTOMER")
+                .orElseThrow(() -> new ResourceNotFoundException("Error: 'ROLE_CUSTOMER' no encontrado."));
 
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setNombre(requestDTO.getNombre());
@@ -122,26 +123,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public Usuario registrarAdmin(UsuarioRegistroRequestDTO requestDTO) {
-        if (usuarioRepository.findByEmail(requestDTO.getEmail()).isPresent()) {
-            throw new EmailAlreadyExistsException("El email '" + requestDTO.getEmail() + "' ya se encuentra registrado.");
-        }
-
-        Rol rolAdmin = rolRepository.findById(1)
-                .orElseThrow(() -> new ResourceNotFoundException("Rol 'ADMINISTRADOR' no encontrado."));
-
-        Usuario nuevoUsuario = new Usuario();
-        nuevoUsuario.setNombre(requestDTO.getNombre());
-        nuevoUsuario.setApellido(requestDTO.getApellido());
-        nuevoUsuario.setEmail(requestDTO.getEmail());
-        nuevoUsuario.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
-        System.out.println(rolAdmin);
-        nuevoUsuario.setRol(rolAdmin);
-
-        return usuarioRepository.save(nuevoUsuario);
-    }
-
-    @Override
     public UsuarioPerfilResponseDTO obtenerMiPerfil() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -165,6 +146,31 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         return this.actualizarUsuario(usuarioActual.getId(), requestDTO);
     }
+
+    @Override
+    public UsuarioPerfilResponseDTO crearUsuarioAdmin(AdminUsuarioCreateRequestDTO requestDTO) {
+        if (usuarioRepository.findByEmail(requestDTO.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException("El email '" + requestDTO.getEmail() + "' ya se encuentra registrado.");
+        }
+
+        Rol rolAsignado = rolRepository.findById(requestDTO.getIdRol())
+                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con id: " + requestDTO.getIdRol()));
+
+        if (rolAsignado.getDescripcion().equals("ROLE_CUSTOMER")) {
+            throw new IllegalArgumentException("No se pueden crear usuarios con el rol 'CUSTOMER' desde este endpoint.");
+        }
+
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setNombre(requestDTO.getNombre());
+        nuevoUsuario.setApellido(requestDTO.getApellido());
+        nuevoUsuario.setEmail(requestDTO.getEmail());
+        nuevoUsuario.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
+        nuevoUsuario.setRol(rolAsignado);
+
+        Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
+        return mapearAUsuarioPerfilResponseDTO(usuarioGuardado);
+    }
+
 
     private UsuarioPerfilResponseDTO mapearAUsuarioPerfilResponseDTO(Usuario usuario) {
         UsuarioPerfilResponseDTO usuarioResponse = new UsuarioPerfilResponseDTO();
