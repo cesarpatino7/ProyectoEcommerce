@@ -1,7 +1,9 @@
 package com.taller.ingenieria.api.config;
 
+import com.taller.ingenieria.api.repository.InvalidatedTokenRepository;
 import com.taller.ingenieria.api.security.JwtService;
 import com.taller.ingenieria.api.security.UserDetailsServiceImpl;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +28,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
+    @Autowired private InvalidatedTokenRepository invalidatedTokenRepository;
+
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -41,6 +45,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
+        final String jti = jwtService.extractClaim(jwt, Claims::getId);
+
+        boolean isTokenInvalidated = invalidatedTokenRepository.findByJti(jti).isPresent();
+        if (isTokenInvalidated) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String userEmail = jwtService.extractUsername(jwt);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {

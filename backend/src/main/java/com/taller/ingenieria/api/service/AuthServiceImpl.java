@@ -3,9 +3,13 @@ package com.taller.ingenieria.api.service;
 import com.taller.ingenieria.api.dto.request.UsuarioLoginRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioLoginResponseDTO;
 import com.taller.ingenieria.api.exception.InvalidCredentialsException;
+import com.taller.ingenieria.api.model.InvalidatedToken;
 import com.taller.ingenieria.api.model.Usuario;
+import com.taller.ingenieria.api.repository.InvalidatedTokenRepository;
 import com.taller.ingenieria.api.repository.UsuarioRepository;
 import com.taller.ingenieria.api.security.JwtService;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -14,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.Optional;
 
 @Service
@@ -25,6 +30,8 @@ public class AuthServiceImpl implements AuthService {
     private JwtService jwtService;
     @Autowired
     private UsuarioRepository usuarioRepository;
+    @Autowired
+    private InvalidatedTokenRepository invalidatedTokenRepository;
 
     @Override
     public UsuarioLoginResponseDTO login(UsuarioLoginRequestDTO loginRequest) {
@@ -52,5 +59,24 @@ public class AuthServiceImpl implements AuthService {
         responseDTO.setToken(token);
 
         return responseDTO;
+    }
+
+    @Override
+    public void logout(HttpServletRequest request) {
+        final String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return;
+        }
+
+        final String jwt = authHeader.substring(7);
+        Claims claims = jwtService.extractAllClaims(jwt);
+        String jti = claims.getId();
+        Date expiryDate = claims.getExpiration();
+
+        InvalidatedToken invalidatedToken = new InvalidatedToken();
+        invalidatedToken.setJti(jti);
+        invalidatedToken.setExpiryDate(expiryDate.toInstant());
+
+        invalidatedTokenRepository.save(invalidatedToken);
     }
 }
