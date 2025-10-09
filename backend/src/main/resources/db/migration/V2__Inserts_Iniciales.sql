@@ -26,8 +26,10 @@ INSERT INTO departamentos (nombre) VALUES
 
 -- CORRECCIÓN: El nombre de la tabla cambió de 'rolUsuario' a 'roles'.
 INSERT INTO roles (descripcion) VALUES
-                                    ('Administrador'),
-                                    ('Cliente');
+                                    ('ROLE_CUSTOMER'),      -- ID 1
+                                    ('ROLE_PRODUCT_MANAGER'), -- ID 2
+                                    ('ROLE_ORDER_MANAGER'),   -- ID 3
+                                    ('ROLE_SUPER_ADMIN');     -- ID 4
 
 -- =============================================
 -- TIPOS DE MOVIMIENTO DE INVENTARIO

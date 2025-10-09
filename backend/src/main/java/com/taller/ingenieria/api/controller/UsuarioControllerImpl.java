@@ -10,6 +10,7 @@ import com.taller.ingenieria.api.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.taller.ingenieria.api.dto.response.UsuarioPerfilResponseDTO;
 
@@ -26,6 +27,7 @@ public class UsuarioControllerImpl implements UsuarioController {
 
     @Override
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<List<UsuarioPerfilResponseDTO>> obtenerTodosLosUsuarios() {
         List<UsuarioPerfilResponseDTO> responseDTO = usuarioService.obtenerTodosLosUsuarios();
         return ResponseEntity.ok(responseDTO);
@@ -42,6 +44,7 @@ public class UsuarioControllerImpl implements UsuarioController {
 
     @Override
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<UsuarioPerfilResponseDTO> obtenerUsuarioPorId(@PathVariable Integer id) {
         UsuarioPerfilResponseDTO usuarioDTO = usuarioService.obtenerUsuarioPorId(id);
         return ResponseEntity.ok(usuarioDTO);
@@ -49,6 +52,7 @@ public class UsuarioControllerImpl implements UsuarioController {
 
     @Override
     @GetMapping("by-email")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<UsuarioPerfilResponseDTO> obtenerUsuarioPorEmail(@RequestParam String email) {
         UsuarioPerfilResponseDTO usuarioDTO = usuarioService.obtenerUsuarioPorEmail(email);
         return ResponseEntity.ok(usuarioDTO);
@@ -56,6 +60,7 @@ public class UsuarioControllerImpl implements UsuarioController {
 
     @Override
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<UsuarioPerfilResponseDTO> actualizarUsuario(@PathVariable Integer id, @RequestBody UsuarioUpdateRequestDTO requestDTO) {
         UsuarioPerfilResponseDTO usuarioDTO = usuarioService.actualizarUsuario(id, requestDTO);
         return ResponseEntity.ok(usuarioDTO);
@@ -70,6 +75,7 @@ public class UsuarioControllerImpl implements UsuarioController {
 
     @Override
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<Void> eliminarUsuario(@PathVariable Integer id) {
         usuarioService.eliminarUsuario(id);
         return ResponseEntity.noContent().build();
@@ -77,6 +83,7 @@ public class UsuarioControllerImpl implements UsuarioController {
 
     @Override
     @PostMapping("/registro-admin")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<UsuarioPerfilResponseDTO> registrarAdmin(@RequestBody UsuarioRegistroRequestDTO requestDTO) {
         Usuario usuario = usuarioService.registrarAdmin(requestDTO);
         UsuarioPerfilResponseDTO usuarioResponse = new UsuarioPerfilResponseDTO();

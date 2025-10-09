@@ -6,6 +6,7 @@ import com.taller.ingenieria.api.service.CategoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class CategoriaControllerImpl implements CategoriaController {
 
     @Override
     @PostMapping
+    @PreAuthorize("hasAnyRole('PRODUCT_MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<CategoriaResponseDTO> crearCategoria(@RequestBody CategoriaRequestDTO categoriaDTO) {
         return new ResponseEntity<>(categoriaService.crearCategoria(categoriaDTO), HttpStatus.CREATED);
     }
@@ -31,18 +33,21 @@ public class CategoriaControllerImpl implements CategoriaController {
 
     @Override
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PRODUCT_MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<CategoriaResponseDTO> obtenerCategoriaPorId(@PathVariable Integer id) {
         return ResponseEntity.ok(categoriaService.obtenerCategoriaPorId(id));
     }
 
     @Override
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PRODUCT_MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<CategoriaResponseDTO> actualizarCategoria(@PathVariable Integer id, @RequestBody CategoriaRequestDTO categoriaDTO) {
         return ResponseEntity.ok(categoriaService.actualizarCategoria(id, categoriaDTO));
     }
 
     @Override
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PRODUCT_MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<Void> eliminarCategoria(@PathVariable Integer id) {
         categoriaService.eliminarCategoria(id);
         return ResponseEntity.noContent().build();
