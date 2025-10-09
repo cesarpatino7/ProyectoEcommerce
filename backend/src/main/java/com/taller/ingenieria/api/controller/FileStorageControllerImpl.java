@@ -4,7 +4,6 @@ import com.taller.ingenieria.api.service.FileStorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,7 +14,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/files")
-public class FileStorageContrallerImpl implements FileStorageContraller {
+public class FileStorageControllerImpl implements FileStorageController {
     @Autowired
     private FileStorageService fileStorageService;
 

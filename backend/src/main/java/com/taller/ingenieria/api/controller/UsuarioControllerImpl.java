@@ -66,12 +66,6 @@ public class UsuarioControllerImpl implements UsuarioController {
         return ResponseEntity.ok(usuarioDTO);
     }
 
-    @Override
-    @PostMapping("/login")
-    public ResponseEntity<UsuarioLoginResponseDTO> loginUsuario(@RequestBody UsuarioLoginRequestDTO requestDTO) {
-        UsuarioLoginResponseDTO responseDTO = usuarioService.loginUsuario(requestDTO);
-        return ResponseEntity.ok(responseDTO);
-    }
 
     @Override
     @DeleteMapping("/{id}")

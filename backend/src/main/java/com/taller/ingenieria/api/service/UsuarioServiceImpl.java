@@ -81,23 +81,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         return responseDTO;
     }
 
-    @Override
-    public UsuarioLoginResponseDTO loginUsuario(UsuarioLoginRequestDTO requestDTO) {
-        Usuario usuario = usuarioRepository.findByEmail(requestDTO.getEmail()).orElse(null);
-
-        if (usuario == null || !passwordEncoder.matches(requestDTO.getPassword(), usuario.getPassword())) {
-            throw new IllegalArgumentException("Credenciales inválidas");
-        }
-
-        UsuarioLoginResponseDTO responseDTO = new UsuarioLoginResponseDTO();
-        responseDTO.setId(usuario.getId());
-        responseDTO.setNombre(usuario.getNombre());
-        responseDTO.setApellido(usuario.getApellido());
-        responseDTO.setEmail(usuario.getEmail());
-        responseDTO.setRol(usuario.getRol().getDescripcion());
-
-        return responseDTO;
-    }
 
     @Override
     public UsuarioPerfilResponseDTO actualizarUsuario(Integer id, UsuarioUpdateRequestDTO requestDTO) {

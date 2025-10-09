@@ -33,7 +33,6 @@ public class CategoriaControllerImpl implements CategoriaController {
 
     @Override
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PRODUCT_MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<CategoriaResponseDTO> obtenerCategoriaPorId(@PathVariable Integer id) {
         return ResponseEntity.ok(categoriaService.obtenerCategoriaPorId(id));
     }

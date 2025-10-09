@@ -17,8 +17,6 @@ public interface UsuarioService {
 
     UsuarioPerfilResponseDTO obtenerUsuarioPorId(Integer id);
 
-    UsuarioLoginResponseDTO loginUsuario(UsuarioLoginRequestDTO requestDTO);
-
     UsuarioPerfilResponseDTO obtenerUsuarioPorEmail(String email);
 
     List<UsuarioPerfilResponseDTO> obtenerTodosLosUsuarios();

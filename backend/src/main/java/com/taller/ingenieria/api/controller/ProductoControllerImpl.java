@@ -1,7 +1,7 @@
 package com.taller.ingenieria.api.controller;
 
-import com.taller.ingenieria.api.dto.request.ProductoCatalogoDTO;
-import com.taller.ingenieria.api.dto.request.ProductoDetalleDTO;
+import com.taller.ingenieria.api.dto.response.ProductoCatalogoDTO;
+import com.taller.ingenieria.api.dto.response.ProductoDetalleDTO;
 import com.taller.ingenieria.api.service.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

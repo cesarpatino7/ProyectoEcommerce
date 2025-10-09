@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 "/api/v1/usuarios/login",
                                 "/api/v1/productos/**",
                                 "/api/v1/categorias",
+                                "/api/v1/categorias/{id}",
                                 "/api/v1/files/download/**"
                         ).permitAll()
                         .requestMatchers("/api/v1/admin/**", "/api/v1/me/**").authenticated()
