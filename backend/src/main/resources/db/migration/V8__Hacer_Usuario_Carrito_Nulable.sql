@@ -1,0 +1,1 @@
+ALTER TABLE carritos ALTER COLUMN id_usuario DROP NOT NULL;

@@ -9,6 +9,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,10 +27,12 @@ public class Carrito {
     @Column(name = "fecha_creacion")
     private Instant fechaCreacion;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "id_usuario", nullable = false)
+    @JoinColumn(name = "id_usuario")
     private Usuario idUsuario;
+
+    @OneToMany(mappedBy = "idCarrito", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemCarrito> items = new java.util.ArrayList<>();
 
 }
