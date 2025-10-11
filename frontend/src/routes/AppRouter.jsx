@@ -7,6 +7,7 @@ import LoginPage from "../pages/LoginPage";
 import ProfilePage from "../pages/ProfilePage";
 import CRUDPage from "../pages/CRUDPage";
 import ProtectedRoute from "./ProtectedRoute";
+import ProductDetailPage from "../pages/ProductDetailPage";
 
 // Definimos los roles de administrador en una constante para mantenerlo limpio
 const ADMIN_ROLES = [
@@ -22,6 +23,7 @@ const AppRouter = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/product/:id" element={<ProductDetailPage />} />
 
       {/* --- Rutas Protegidas para CUALQUIER usuario logueado --- */}
       <Route element={<ProtectedRoute />}>

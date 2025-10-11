@@ -1,11 +1,80 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 
 const ProductoDetalle = () => {
+  const { id } = useParams();
   const [showNotif, setShowNotif] = useState(false);
-  const [notifType, setNotifType] = useState("success"); // 'success' | 'error'
+  const [notifType, setNotifType] = useState("success");
   const [notifMsg, setNotifMsg] = useState("");
   const [cantidad, setCantidad] = useState(1);
+  const [product, setProduct] = useState(null);
   const stock = 99;
+
+  // Datos de ejemplo - Después los obtendremos del backend
+  const products = [
+    {
+      id: 1,
+      name: "VERSACE EROS",
+      price: 99.99,
+      image: "https://ss881.suburbia.com.mx/xl/5011408721.jpg",
+      gender: "masculino",
+      brand: "versace",
+      description: "Una fragancia seductora y potente para el hombre moderno. Notas de menta, manzana verde y limón italiano."
+    },
+    {
+      id: 2,
+      name: "DOLCE & GABBANA LIGHT BLUE",
+      price: 85.50,
+      image: "https://falabella.scene7.com/is/image/FalabellaPE/882125365_1",
+      gender: "femenino",
+      brand: "dolce & gabbana",
+      description: "Una fragancia fresca y floral que evoca el espíritu del verano mediterráneo. Notas de manzana, campanilla y bambú."
+    },
+    {
+      id: 3,
+      name: "CAROLINA HERRERA 212 VIP",
+      price: 110.00,
+      image: "https://falabella.scene7.com/is/image/FalabellaPE/881952283_1",
+      gender: "femenino",
+      brand: "carolina herrera",
+      description: "Una fragancia elegante y sofisticada. Notas de gardenia, bergamota y almizcle."
+    },
+    {
+      id: 4,
+      name: "CHANEL N°5",
+      price: 130.00,
+      image: "https://odomo.pe/wp-content/uploads/2022/12/CHANEL-N%C2%B05-EAU-DE-PARFUM-SPRAY.webp",
+      gender: "femenino",
+      brand: "chanel",
+      description: "El perfume más icónico del mundo. Una composición floral aldehydica con notas de rosa y jazmín."
+    },
+    {
+      id: 5,
+      name: "HUGO BOSS BOTTLED",
+      price: 89.99,
+      image: "https://falabella.scene7.com/is/image/FalabellaPE/881858070_1",
+      gender: "masculino",
+      brand: "hugo boss",
+      description: "Una fragancia masculina y elegante. Notas de manzana, canela y sándalo."
+    },
+    {
+      id: 6,
+      name: "DIOR SAUVAGE",
+      price: 120.00,
+      image: "https://falabella.scene7.com/is/image/FalabellaPE/882069165_1",
+      gender: "masculino",
+      brand: "dior",
+      description: "Una fragancia fresca y potente. Notas de bergamota, pimienta y ambroxan."
+    }
+  ];
+
+  useEffect(() => {
+    const productId = parseInt(id);
+    const foundProduct = products.find(p => p.id === productId);
+    if (foundProduct) {
+      setProduct(foundProduct);
+    }
+  }, [id]);
   const handleAddToCart = () => {
     if (!cantidad || isNaN(cantidad) || cantidad < 1 || cantidad > stock) {
       setNotifType("error");
@@ -19,6 +88,18 @@ const ProductoDetalle = () => {
     setShowNotif(true);
     setTimeout(() => setShowNotif(false), 2000);
   };
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('es-PY', {
+      style: 'currency',
+      currency: 'PYG',
+      maximumFractionDigits: 0
+    }).format(price * 7300);
+  };
+
+  if (!product) {
+    return <div className="text-center py-8">Producto no encontrado</div>;
+  }
+
   return (
     <>
       {showNotif && (
@@ -41,39 +122,83 @@ const ProductoDetalle = () => {
       <figure className="flex items-center justify-center w-full max-w-[180px] sm:max-w-[220px] md:max-w-[260px]
       lg:max-w-[300px] xl:max-w-[340px] h-auto aspect-[3/4] mx-auto bg-white">
         <img
-          src="https://ss881.suburbia.com.mx/xl/5011408721.jpg"
-          alt="Perfume Lumière Dorée"
+          src={product.image}
+          alt={product.name}
           className="object-contain w-full h-full max-h-80 sm:max-h-96"
           style={{ minWidth: '120px', maxWidth: '100%', maxHeight: '380px', background: 'white' }}
         />
       </figure>
       <div className="card-body flex-1 lg:w-auto min-w-0">
-        <h2 className="card-title text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-black break-words">
-          VERSACE EROS ENERGY EAU DE PARFUM
-        </h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <h2 className="card-title text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-black break-words">
+            {product.name}
+          </h2>
+          <span className="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800 capitalize">
+            {product.gender}
+          </span>
+        </div>
+        <p className="text-xl font-semibold text-gray-700 capitalize mt-2">
+          Marca: {product.brand}
+        </p>
         <p className="text-gray-600 leading-relaxed text-justify text-xs sm:text-sm md:text-base">
-          Es una fragancia vibrante y moderna, diseñada para hombres seguros y apasionados.
-          Combina notas frescas y cítricas con un fondo cálido y amaderado,
-          creando un aroma que transmite energía, seducción y dinamismo.
+          {product.description}
         </p>
         <div className="mt-3">
           <p className="text-lg sm:text-xl md:text-2xl font-semibold text-blue-900">
-            $99.99
+            {formatPrice(product.price)}
           </p>
           <p className="text-xs sm:text-sm text-gray-500">
-            Stock disponible: 99 unidades
+            Stock disponible: {stock} unidades
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 mt-4 items-center">
-          <input
-            type="number"
-            placeholder="Cantidad"
-            min="1"
-            max={stock}
-            value={cantidad}
-            onChange={e => setCantidad(Number(e.target.value))}
-            className="input input-bordered w-20 sm:w-28 text-center"
-          />
+          <div className="flex items-center">
+            <button
+              type="button"
+              className="btn btn-sm btn-outline"
+              onClick={() => setCantidad(prev => Math.max(1, prev - 1))}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M20 12H4"
+                />
+              </svg>
+            </button>
+            <input
+              type="text"
+              value={cantidad}
+              readOnly
+              className="input input-bordered w-16 text-center mx-2"
+              style={{ appearance: 'textfield' }}
+            />
+            <button
+              type="button"
+              className="btn btn-sm btn-outline"
+              onClick={() => setCantidad(prev => Math.min(stock, prev + 1))}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </button>
+          </div>
           <button
             className="btn btn-primary w-full sm:w-auto text-white font-bold bg-blue-950"
             onClick={handleAddToCart}
