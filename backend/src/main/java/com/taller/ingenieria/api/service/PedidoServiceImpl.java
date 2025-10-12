@@ -1,0 +1,159 @@
+package com.taller.ingenieria.api.service;
+
+import com.taller.ingenieria.api.dto.request.CheckoutRequestDTO;
+import com.taller.ingenieria.api.dto.response.DireccionResponseDTO;
+import com.taller.ingenieria.api.dto.response.PedidoResponseDTO;
+import com.taller.ingenieria.api.exception.ResourceNotFoundException;
+import com.taller.ingenieria.api.model.*;
+import com.taller.ingenieria.api.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class PedidoServiceImpl implements PedidoService {
+
+    @Autowired private PedidoRepository pedidoRepository;
+    @Autowired private DetallePedidoRepository detallePedidoRepository;
+    @Autowired private CarritoRepository carritoRepository;
+    @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private DireccionRepository direccionRepository;
+    @Autowired private EstadoRepository estadoRepository;
+    @Autowired private ItemCarritoRepository itemCarritoRepository;
+
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO crearPedido(CheckoutRequestDTO checkoutDTO) {
+        // PASO 1: Obtener los datos necesarios (usuario, carrito, dirección)
+        Usuario usuario = obtenerUsuarioAutenticado();
+        Carrito carrito = obtenerCarritoDelUsuario(usuario);
+        Direccion direccion = validarDireccion(checkoutDTO.getIdDireccion(), usuario);
+
+        // PASO 2: Crear el objeto Pedido principal
+        Pedido nuevoPedido = crearPedidoPrincipal(usuario, direccion);
+
+        // PASO 3: Convertir los items del carrito en detalles del pedido
+        List<DetallePedido> detalles = transferirItemsACarrito(carrito, nuevoPedido);
+
+        // PASO 4: Limpiar el carrito de compras
+        limpiarCarrito(carrito);
+
+        // PASO 5: Guardar el pedido y sus detalles, aca el trigger de la bd ya calcula el total
+        pedidoRepository.save(nuevoPedido);
+        detallePedidoRepository.saveAll(detalles);
+
+        // Devolvemos el pedido con sus detalles para la página de confirmación
+        return convertirADTO(nuevoPedido, detalles);
+    }
+
+
+    private Usuario obtenerUsuarioAutenticado() {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        return usuarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado para la sesión actual. No se puede crear el pedido."));
+    }
+
+    private Carrito obtenerCarritoDelUsuario(Usuario usuario) {
+        Carrito carrito = carritoRepository.findByIdUsuario_Id(usuario.getId())
+                .orElseThrow(() -> new IllegalStateException("No se encontró un carrito para el usuario."));
+
+        if (carrito.getItems() == null || carrito.getItems().isEmpty()) {
+            throw new IllegalStateException("El carrito está vacío. No se puede crear un pedido.");
+        }
+
+        return carrito;
+    }
+
+    private Direccion validarDireccion(Integer idDireccion, Usuario usuario) {
+        Direccion direccion = direccionRepository.findById(idDireccion)
+                .orElseThrow(() -> new ResourceNotFoundException("La dirección de envío seleccionada con ID " + idDireccion + " no existe."));
+
+        if (!direccion.getIdUsuario().getId().equals(usuario.getId())) {
+            throw new SecurityException("La dirección de envío seleccionada no pertenece al usuario actual.");
+        }
+
+        return direccion;
+    }
+
+    private Pedido crearPedidoPrincipal(Usuario usuario, Direccion direccion) {
+        Pedido nuevoPedido = new Pedido();
+        nuevoPedido.setIdUsuario(usuario);
+        nuevoPedido.setIdDireccion(direccion);
+
+        // Asignamos un estado inicial. Asumimos que el estado "Pendiente" para pedidos tiene ID = 1.
+        // Una mejora futura sería buscar el estado por su descripción.
+        Estado estadoInicial = estadoRepository.findById(1)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el estado inicial 'Pendiente' para el pedido."));
+        nuevoPedido.setIdEstado(estadoInicial);
+
+        // El total se calculará automáticamente por el trigger de la base de datos,
+        // por lo que lo inicializamos en cero.
+        nuevoPedido.setTotal(BigDecimal.ZERO);
+
+        return nuevoPedido;
+    }
+
+    private List<DetallePedido> transferirItemsACarrito(Carrito carrito, Pedido nuevoPedido) {
+        List<DetallePedido> detalles = new ArrayList<>();
+
+        for (ItemCarrito item : carrito.getItems()) {
+            DetallePedido detalle = new DetallePedido();
+            detalle.setIdPedido(nuevoPedido);
+            detalle.setIdProducto(item.getIdProducto());
+            detalle.setCantidad(item.getCantidad());
+            detalle.setPrecioUnitario(item.getIdProducto().getPrecio());
+            detalles.add(detalle);
+        }
+
+        return detalles;
+    }
+
+    private void limpiarCarrito(Carrito carrito) {
+        itemCarritoRepository.deleteAll(carrito.getItems());
+
+        carrito.getItems().clear();
+    }
+
+
+
+    private PedidoResponseDTO convertirADTO(Pedido pedido, List<DetallePedido> detalles) {
+        PedidoResponseDTO responseDTO = new PedidoResponseDTO();
+
+        responseDTO.setId(pedido.getId());
+        responseDTO.setFechaPedido(pedido.getFechaPedido());
+        responseDTO.setEstado(pedido.getIdEstado().getDescripcion());
+
+
+        BigDecimal totalCalculado = detalles.stream()
+                .map(detalle -> detalle.getPrecioUnitario().multiply(new BigDecimal(detalle.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        responseDTO.setTotal(totalCalculado);
+
+        DireccionResponseDTO direccionDTO = new DireccionResponseDTO();
+        Direccion direccion = pedido.getIdDireccion();
+        direccionDTO.setId(direccion.getId());
+        direccionDTO.setDescripcionCalle(direccion.getDescripcionCalle());
+        direccionDTO.setNombreCiudad(direccion.getIdCiudad().getNombre());
+        direccionDTO.setNombreDepartamento(direccion.getIdCiudad().getIdDepartamento().getNombre());
+        responseDTO.setDireccionEnvio(direccionDTO);
+
+        List<PedidoResponseDTO.ItemPedidoResponseDTO> itemsDTO = detalles.stream().map(detalle -> {
+            PedidoResponseDTO.ItemPedidoResponseDTO itemDTO = new PedidoResponseDTO.ItemPedidoResponseDTO();
+            itemDTO.setNombreProducto(detalle.getIdProducto().getNombre());
+            itemDTO.setCantidad(detalle.getCantidad());
+            itemDTO.setPrecioUnitario(detalle.getPrecioUnitario());
+            return itemDTO;
+        }).collect(Collectors.toList());
+
+        responseDTO.setItems(itemsDTO);
+
+        return responseDTO;
+    }
+}
