@@ -12,9 +12,12 @@ import com.stripe.param.PaymentIntentCreateParams;
 import com.taller.ingenieria.api.dto.response.CarritoResponseDTO;
 import com.taller.ingenieria.api.dto.response.PaymentIntentResponseDTO;
 import com.taller.ingenieria.api.exception.BusinessValidationException;
+import com.taller.ingenieria.api.exception.ResourceNotFoundException;
 import com.taller.ingenieria.api.model.Carrito;
+import com.taller.ingenieria.api.model.Direccion;
 import com.taller.ingenieria.api.model.Usuario;
 import com.taller.ingenieria.api.repository.CarritoRepository;
+import com.taller.ingenieria.api.repository.DireccionRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,6 +45,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private PedidoService pedidoService;
 
+    @Autowired
+    DireccionRepository direccionRepository;
+
     @PostConstruct
     public void init() {
         Stripe.apiKey = secretKey;
@@ -54,7 +60,7 @@ public class PaymentServiceImpl implements PaymentService {
         Carrito carrito = carritoRepository.findById(carritoDTO.getId()).orElseThrow();
         Usuario usuario = carrito.getIdUsuario();
 
-        BigDecimal total = carritoDTO.getTotal();
+        validarDireccion(idDireccion, usuario);
 
         if (usuario == null) {
             throw new BusinessValidationException("Los usuarios anónimos no pueden realizar pagos. Por favor, inicia sesión.");
@@ -63,6 +69,8 @@ public class PaymentServiceImpl implements PaymentService {
         if (usuario.getTelefono() == null || usuario.getTelefono().trim().isEmpty()) {
             throw new BusinessValidationException("Es necesario que agregues un número de teléfono a tu perfil antes de poder realizar un pedido.");
         }
+
+        BigDecimal total = carritoDTO.getTotal();
 
         if (total == null || total.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessValidationException("No se puede procesar el pago. El carrito está vacío o el total es cero.");
@@ -83,6 +91,15 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentIntent paymentIntent = PaymentIntent.create(params);
         return new PaymentIntentResponseDTO(paymentIntent.getClientSecret());
+    }
+
+    private void validarDireccion(Integer idDireccion, Usuario usuario) {
+        Direccion direccion = direccionRepository.findById(idDireccion)
+                .orElseThrow(() -> new ResourceNotFoundException("La dirección de envío seleccionada con ID " + idDireccion + " no existe."));
+
+        if (!direccion.getIdUsuario().getId().equals(usuario.getId())) {
+            throw new SecurityException("La dirección de envío seleccionada no pertenece al usuario actual.");
+        }
     }
 
     @Override
