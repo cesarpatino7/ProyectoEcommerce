@@ -2,6 +2,7 @@ package com.taller.ingenieria.api.service;
 
 import com.taller.ingenieria.api.dto.request.CheckoutRequestDTO;
 import com.taller.ingenieria.api.dto.response.DireccionResponseDTO;
+import com.taller.ingenieria.api.dto.response.PedidoHistorialDTO;
 import com.taller.ingenieria.api.dto.response.PedidoResponseDTO;
 import com.taller.ingenieria.api.exception.BusinessValidationException;
 import com.taller.ingenieria.api.exception.ResourceNotFoundException;
@@ -164,5 +165,38 @@ public class PedidoServiceImpl implements PedidoService {
         responseDTO.setItems(itemsDTO);
 
         return responseDTO;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoHistorialDTO> obtenerMisPedidos() {
+        Usuario usuario = obtenerUsuarioAutenticado();
+
+        List<Pedido> pedidos = pedidoRepository.findByIdUsuario_Id(usuario.getId());
+
+        return pedidos.stream()
+                .map(this::convertirAPedidoHistorialDTO)
+                .collect(Collectors.toList());
+    }
+
+
+    private PedidoHistorialDTO convertirAPedidoHistorialDTO(Pedido pedido) {
+        PedidoHistorialDTO dto = new PedidoHistorialDTO();
+        dto.setId(pedido.getId());
+        dto.setFechaPedido(pedido.getFechaPedido());
+        dto.setEstado(pedido.getIdEstado().getDescripcion());
+        dto.setTotal(pedido.getTotal());
+        List<PedidoHistorialDTO.ItemHistorialDTO> itemsDTO = pedido.getDetalles().stream()
+                .map(detalle -> {
+                    PedidoHistorialDTO.ItemHistorialDTO itemDTO = new PedidoHistorialDTO.ItemHistorialDTO();
+                    itemDTO.setNombreProducto(detalle.getIdProducto().getNombre());
+                    itemDTO.setCantidad(detalle.getCantidad());
+                    return itemDTO;
+                })
+                .collect(Collectors.toList());
+
+        dto.setItems(itemsDTO);
+
+        return dto;
     }
 }

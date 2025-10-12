@@ -8,6 +8,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -48,4 +49,6 @@ public class Pedido {
     @Column(name = "total", nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
 
+    @OneToMany(mappedBy = "idPedido", fetch = FetchType.LAZY)
+    private List<DetallePedido> detalles;
 }

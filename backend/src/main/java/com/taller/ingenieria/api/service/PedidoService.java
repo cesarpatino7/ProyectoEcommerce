@@ -1,7 +1,10 @@
 package com.taller.ingenieria.api.service;
 
 import com.taller.ingenieria.api.dto.request.CheckoutRequestDTO;
+import com.taller.ingenieria.api.dto.response.PedidoHistorialDTO;
 import com.taller.ingenieria.api.dto.response.PedidoResponseDTO;
+
+import java.util.List;
 
 public interface PedidoService {
 
@@ -13,4 +16,10 @@ public interface PedidoService {
      * @return Un DTO con el resumen del pedido creado.
      */
     PedidoResponseDTO crearPedido(CheckoutRequestDTO checkoutDTO);
+
+    /**
+     * Obtiene el historial de pedidos del usuario autenticado.
+     * @return Una lista de DTOs con el resumen de cada pedido.
+     */
+    List<PedidoHistorialDTO> obtenerMisPedidos();
 }
