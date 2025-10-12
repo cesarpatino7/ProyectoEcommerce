@@ -13,6 +13,15 @@ import java.util.List;
 public interface PedidoService {
 
     /**
+     * Crea un pedido después de una confirmación de pago exitosa (ej. desde Stripe).
+     * Esta es la lógica central de creación de pedidos, desacoplada del contexto de seguridad.
+     *
+     * @param carritoId El ID del carrito que se convertirá en pedido.
+     * @param direccionId El ID de la dirección de envío para el pedido.
+     */
+    void crearPedidoPostPago(Integer carritoId, Integer direccionId);
+
+    /**
      * Lógica principal del checkout. Crea un pedido a partir del carrito del usuario,
      * transfiere los items, calcula el total y limpia el carrito.
      *

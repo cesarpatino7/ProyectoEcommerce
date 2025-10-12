@@ -37,3 +37,4 @@ build/
 
 # ¡IMPORTANTE! Ignorar el archivo de propiedades real
 application.properties
+./src/main/resources/application-local.properties

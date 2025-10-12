@@ -12,6 +12,7 @@ import com.taller.ingenieria.api.exception.StockConflictException;
 import com.taller.ingenieria.api.model.*;
 import com.taller.ingenieria.api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +36,43 @@ public class PedidoServiceImpl implements PedidoService {
     @Autowired private DireccionRepository direccionRepository;
     @Autowired private EstadoRepository estadoRepository;
     @Autowired private ItemCarritoRepository itemCarritoRepository;
+
+    @Override
+    @Transactional
+    public void crearPedidoPostPago(Integer carritoId, Integer direccionId) {
+        Carrito carrito = carritoRepository.findById(carritoId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el carrito con ID: " + carritoId));
+
+        Usuario usuario = carrito.getIdUsuario();
+        if (usuario == null) {
+            throw new BusinessValidationException("No se pueden procesar pedidos de carritos anónimos.");
+        }
+
+        if (carrito.getItems() == null || carrito.getItems().isEmpty()) {
+            throw new BusinessValidationException("El carrito está vacío. No se puede crear un pedido.");
+        }
+
+        Direccion direccion = validarDireccion(direccionId, usuario);
+
+        if (usuario.getTelefono() == null || usuario.getTelefono().trim().isEmpty()) {
+            throw new BusinessValidationException("El usuario no tiene un número de teléfono registrado.");
+        }
+
+        Pedido nuevoPedido = crearPedidoPrincipal(usuario, direccion);
+        List<DetallePedido> detalles = transferirItemsACarrito(carrito, nuevoPedido);
+
+        try {
+            pedidoRepository.save(nuevoPedido);
+            detallePedidoRepository.saveAll(detalles);
+            limpiarCarrito(carrito);
+        } catch (org.springframework.dao.DataAccessException e) {
+            Throwable rootCause = e.getRootCause();
+            if (rootCause != null && rootCause.getMessage().contains("Stock insuficiente para el producto seleccionado.")) {
+                throw new StockConflictException("No hay suficiente stock para uno de los productos en el pedido.");
+            }
+            throw e;
+        }
+    }
 
 
     @Override
