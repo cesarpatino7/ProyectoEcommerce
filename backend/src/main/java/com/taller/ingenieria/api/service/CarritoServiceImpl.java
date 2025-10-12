@@ -5,6 +5,7 @@ import com.taller.ingenieria.api.dto.request.UpdateItemRequestDTO;
 import com.taller.ingenieria.api.dto.response.CarritoResponseDTO;
 import com.taller.ingenieria.api.dto.response.ItemCarritoResponseDTO;
 import com.taller.ingenieria.api.exception.ResourceNotFoundException;
+import com.taller.ingenieria.api.exception.StockConflictException;
 import com.taller.ingenieria.api.model.*;
 import com.taller.ingenieria.api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ public class CarritoServiceImpl implements CarritoService {
     @Autowired private ItemCarritoRepository itemCarritoRepository;
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private ProductoRepository productoRepository;
+    @Autowired private InventarioRepository inventarioRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -42,19 +44,32 @@ public class CarritoServiceImpl implements CarritoService {
         Producto producto = productoRepository.findById(addItemDTO.getIdProducto())
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + addItemDTO.getIdProducto()));
 
+        Inventario inventario = inventarioRepository.findByIdProducto_Id(producto.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Inventario no encontrado para el producto: " + producto.getNombre()));
+
         Optional<ItemCarrito> itemExistenteOpt = carrito.getItems().stream()
                 .filter(item -> item.getIdProducto().getId().equals(addItemDTO.getIdProducto()))
                 .findFirst();
 
+        int cantidadSolicitada = addItemDTO.getCantidad();
+        int cantidadActualEnCarrito = 0;
+        if (itemExistenteOpt.isPresent()) {
+            cantidadActualEnCarrito = itemExistenteOpt.get().getCantidad();
+        }
+
+        if ((cantidadActualEnCarrito + cantidadSolicitada) > inventario.getStockActual()) {
+            throw new StockConflictException("Stock insuficiente. Solo quedan " + inventario.getStockActual() + " unidades de '" + producto.getNombre() + "'.");
+        }
+
         if (itemExistenteOpt.isPresent()) {
             ItemCarrito itemExistente = itemExistenteOpt.get();
-            itemExistente.setCantidad(itemExistente.getCantidad() + addItemDTO.getCantidad());
+            itemExistente.setCantidad(itemExistente.getCantidad() + cantidadSolicitada);
             itemCarritoRepository.save(itemExistente);
         } else {
             ItemCarrito nuevoItem = new ItemCarrito();
             nuevoItem.setIdCarrito(carrito);
             nuevoItem.setIdProducto(producto);
-            nuevoItem.setCantidad(addItemDTO.getCantidad());
+            nuevoItem.setCantidad(cantidadSolicitada);
             carrito.getItems().add(nuevoItem);
             itemCarritoRepository.save(nuevoItem);
         }
@@ -67,6 +82,13 @@ public class CarritoServiceImpl implements CarritoService {
     public CarritoResponseDTO actualizarItemDelCarrito(String cartId, Integer itemId, UpdateItemRequestDTO updateItemDTO) {
         Carrito carrito = obtenerCarritoExistente(cartId);
         ItemCarrito item = validarItemPerteneceAlCarrito(itemId, carrito);
+
+        Inventario inventario = inventarioRepository.findByIdProducto_Id(item.getIdProducto().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Inventario no encontrado para el producto: " + item.getIdProducto().getNombre()));
+
+        if (updateItemDTO.getCantidad() > inventario.getStockActual()) {
+            throw new StockConflictException("Stock insuficiente. Solo quedan " + inventario.getStockActual() + " unidades de '" + item.getIdProducto().getNombre() + "'.");
+        }
 
         if (updateItemDTO.getCantidad() <= 0) {
             carrito.getItems().remove(item);

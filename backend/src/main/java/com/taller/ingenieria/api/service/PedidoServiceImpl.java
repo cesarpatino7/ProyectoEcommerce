@@ -3,15 +3,19 @@ package com.taller.ingenieria.api.service;
 import com.taller.ingenieria.api.dto.request.CheckoutRequestDTO;
 import com.taller.ingenieria.api.dto.response.DireccionResponseDTO;
 import com.taller.ingenieria.api.dto.response.PedidoResponseDTO;
+import com.taller.ingenieria.api.exception.BusinessValidationException;
 import com.taller.ingenieria.api.exception.ResourceNotFoundException;
+import com.taller.ingenieria.api.exception.StockConflictException;
 import com.taller.ingenieria.api.model.*;
 import com.taller.ingenieria.api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,26 +35,29 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public PedidoResponseDTO crearPedido(CheckoutRequestDTO checkoutDTO) {
-        // PASO 1: Obtener los datos necesarios (usuario, carrito, dirección)
         Usuario usuario = obtenerUsuarioAutenticado();
         Carrito carrito = obtenerCarritoDelUsuario(usuario);
         Direccion direccion = validarDireccion(checkoutDTO.getIdDireccion(), usuario);
 
-        // PASO 2: Crear el objeto Pedido principal
         Pedido nuevoPedido = crearPedidoPrincipal(usuario, direccion);
 
-        // PASO 3: Convertir los items del carrito en detalles del pedido
         List<DetallePedido> detalles = transferirItemsACarrito(carrito, nuevoPedido);
 
-        // PASO 4: Limpiar el carrito de compras
-        limpiarCarrito(carrito);
+        try {
+            pedidoRepository.save(nuevoPedido);
+            detallePedidoRepository.saveAll(detalles);
 
-        // PASO 5: Guardar el pedido y sus detalles, aca el trigger de la bd ya calcula el total
-        pedidoRepository.save(nuevoPedido);
-        detallePedidoRepository.saveAll(detalles);
+            limpiarCarrito(carrito);
 
-        // Devolvemos el pedido con sus detalles para la página de confirmación
-        return convertirADTO(nuevoPedido, detalles);
+            return convertirADTO(nuevoPedido, detalles);
+
+        } catch (org.springframework.dao.DataAccessException e) {
+            Throwable rootCause = e.getRootCause();
+            if (rootCause != null && rootCause.getMessage().contains("Stock insuficiente para el producto seleccionado.")) {
+                throw new StockConflictException("No hay suficiente stock para uno de los productos en el pedido.");
+            }
+            throw e;
+        }
     }
 
 
@@ -62,10 +69,10 @@ public class PedidoServiceImpl implements PedidoService {
 
     private Carrito obtenerCarritoDelUsuario(Usuario usuario) {
         Carrito carrito = carritoRepository.findByIdUsuario_Id(usuario.getId())
-                .orElseThrow(() -> new IllegalStateException("No se encontró un carrito para el usuario."));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró un carrito para el usuario."));
 
         if (carrito.getItems() == null || carrito.getItems().isEmpty()) {
-            throw new IllegalStateException("El carrito está vacío. No se puede crear un pedido.");
+            throw new BusinessValidationException("El carrito está vacío. No se puede crear un pedido.");
         }
 
         return carrito;
@@ -86,6 +93,8 @@ public class PedidoServiceImpl implements PedidoService {
         Pedido nuevoPedido = new Pedido();
         nuevoPedido.setIdUsuario(usuario);
         nuevoPedido.setIdDireccion(direccion);
+
+        nuevoPedido.setFechaPedido(Instant.now());
 
         // Asignamos un estado inicial. Asumimos que el estado "Pendiente" para pedidos tiene ID = 1.
         // Una mejora futura sería buscar el estado por su descripción.
