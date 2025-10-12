@@ -1,7 +1,9 @@
 package com.taller.ingenieria.api.service;
 
 import com.taller.ingenieria.api.dto.request.CheckoutRequestDTO;
+import com.taller.ingenieria.api.dto.request.UpdateEstadoPedidoRequestDTO;
 import com.taller.ingenieria.api.dto.response.DireccionResponseDTO;
+import com.taller.ingenieria.api.dto.response.PedidoAdminDTO;
 import com.taller.ingenieria.api.dto.response.PedidoHistorialDTO;
 import com.taller.ingenieria.api.dto.response.PedidoResponseDTO;
 import com.taller.ingenieria.api.exception.BusinessValidationException;
@@ -11,6 +13,8 @@ import com.taller.ingenieria.api.model.*;
 import com.taller.ingenieria.api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +41,12 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     public PedidoResponseDTO crearPedido(CheckoutRequestDTO checkoutDTO) {
         Usuario usuario = obtenerUsuarioAutenticado();
+
+
+        if (usuario.getTelefono() == null || usuario.getTelefono().trim().isEmpty()) {
+            throw new BusinessValidationException("Es necesario que agregues un número de teléfono a tu perfil antes de poder realizar un pedido.");
+        }
+
         Carrito carrito = obtenerCarritoDelUsuario(usuario);
         Direccion direccion = validarDireccion(checkoutDTO.getIdDireccion(), usuario);
 
@@ -196,6 +206,60 @@ public class PedidoServiceImpl implements PedidoService {
                 .collect(Collectors.toList());
 
         dto.setItems(itemsDTO);
+
+        return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PedidoAdminDTO> obtenerTodosLosPedidos(Pageable pageable) {
+        Page<Pedido> paginaPedidos = pedidoRepository.findAll(pageable);
+
+        return paginaPedidos.map(this::convertirAPedidoAdminDTO);
+    }
+
+    @Override
+    @Transactional
+    public PedidoAdminDTO actualizarEstadoPedido(Integer idPedido, UpdateEstadoPedidoRequestDTO updateDTO) {
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + idPedido));
+
+        Estado nuevoEstado = estadoRepository.findById(updateDTO.getIdEstado())
+                .orElseThrow(() -> new ResourceNotFoundException("Estado no encontrado con ID: " + updateDTO.getIdEstado()));
+
+        pedido.setIdEstado(nuevoEstado);
+
+        if (nuevoEstado.getId().equals(4)) {
+            pedido.setFechaEntrega(Instant.now());
+        }
+
+        Pedido pedidoActualizado = pedidoRepository.save(pedido);
+
+        return convertirAPedidoAdminDTO(pedidoActualizado);
+    }
+
+
+    private PedidoAdminDTO convertirAPedidoAdminDTO(Pedido pedido) {
+        PedidoAdminDTO dto = new PedidoAdminDTO();
+        dto.setId(pedido.getId());
+        dto.setFechaPedido(pedido.getFechaPedido());
+        dto.setEstado(pedido.getIdEstado().getDescripcion());
+        dto.setTotal(pedido.getTotal());
+
+        Usuario usuario = pedido.getIdUsuario();
+        dto.setIdUsuario(usuario.getId());
+        dto.setNombreUsuario(usuario.getNombre() + " " + usuario.getApellido());
+        dto.setEmailUsuario(usuario.getEmail());
+
+        dto.setTelefonoUsuario(usuario.getTelefono());
+
+        Direccion direccion = pedido.getIdDireccion();
+        String direccionFormateada = String.format("%s, %s, %s",
+                direccion.getDescripcionCalle(),
+                direccion.getIdCiudad().getNombre(),
+                direccion.getIdCiudad().getIdDepartamento().getNombre()
+        );
+        dto.setDireccionEnvio(direccionFormateada);
 
         return dto;
     }
