@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import UserTable from "../components/userTable";
 import EditUserModal from "../components/EditUserModal";
-import RegisterAdminModal from "../components/registerAdminModal";
+import RegisterAdminModal from "../components/RegisterAdminModal";
 import Notification from "../components/Notification";
+
+import { userService } from "../api/userService";
+import { useAuth } from "../context/AuthContext";
 
 const CRUDPage = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({
@@ -16,48 +18,41 @@ const CRUDPage = () => {
     type: "",
   });
 
-  const API_URL = "http://localhost:8080/api/v1/usuarios";
+  // 2. Obtenemos el usuario actual de nuestro contexto global
+  const { user: currentUser } = useAuth();
 
   const showNotification = (message, type = "error") => {
     setNotification({ show: true, message, type });
+    setTimeout(
+      () => setNotification({ show: false, message: "", type: "" }),
+      3000
+    );
   };
 
-  const fetchUsers = async () => {
+  // 3. La función para obtener usuarios ahora usa nuestro servicio
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(API_URL);
-      if (!response.ok) {
-        throw new Error("Error al obtener la lista de usuarios.");
-      }
-      const data = await response.json();
+      const data = await userService.getAllUsers();
       setUsers(data);
     } catch (err) {
-      showNotification(err.message);
+      showNotification(err.message || "Error al obtener la lista de usuarios.");
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    const loggedInUser = localStorage.getItem("usuario");
-    if (loggedInUser) {
-      setCurrentUser(JSON.parse(loggedInUser));
-    }
-    fetchUsers();
   }, []);
 
+  useEffect(() => {
+    // Ya no necesitamos leer del localStorage, solo llamar a la función
+    fetchUsers();
+  }, [fetchUsers]);
+
+  // 4. Todas las funciones de manejo de datos ahora usan el servicio
   const handleUpdateUser = async (data) => {
     try {
-      const response = await fetch(`${API_URL}/${selectedUser.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        throw new Error("Error al actualizar el usuario.");
-      }
+      await userService.updateUser(selectedUser.id, data);
       setSelectedUser(null);
-      fetchUsers();
+      fetchUsers(); // Recargamos la lista
       showNotification("Usuario actualizado con éxito.", "success");
     } catch (err) {
       showNotification(err.message);
@@ -67,12 +62,7 @@ const CRUDPage = () => {
   const handleDeleteClick = async (userId) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
       try {
-        const response = await fetch(`${API_URL}/${userId}`, {
-          method: "DELETE",
-        });
-        if (!response.ok) {
-          throw new Error("Error al eliminar el usuario.");
-        }
+        await userService.deleteUser(userId);
         fetchUsers();
         showNotification("Usuario eliminado con éxito.", "success");
       } catch (err) {
@@ -81,29 +71,25 @@ const CRUDPage = () => {
     }
   };
 
+  // 5. El registro de admin ahora usa el nuevo endpoint y DTO
   const handleRegisterAdmin = async (data) => {
     try {
-      const response = await fetch(`${API_URL}/registro-admin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const responseData = await response.json();
-      if (!response.ok) {
-        throw new Error(
-          responseData.message || "Error al registrar administrador."
-        );
-      }
+      // El 'data' del formulario ya debería incluir nombre, email, password y idRol
+      await userService.createUser(data);
       setIsRegisterModalOpen(false);
-      fetchUsers();
-      showNotification("Administrador registrado con éxito.", "success");
+      fetchUsers(); // Recargamos la lista
+      showNotification(
+        "Usuario administrador registrado con éxito.",
+        "success"
+      );
     } catch (err) {
       showNotification(err.message);
     }
   };
 
+  // Filtramos al usuario actual de la lista para no verse a sí mismo
   const filteredUsers = currentUser
-    ? users.filter((user) => user.id !== currentUser.id)
+    ? users.filter((user) => user.email !== currentUser.email)
     : users;
 
   if (loading) {
@@ -114,6 +100,7 @@ const CRUDPage = () => {
     );
   }
 
+  // El JSX no necesita grandes cambios, ya que la lógica está abstraída.
   return (
     <div className="p-4 md:p-8">
       {notification.show && (
@@ -125,23 +112,20 @@ const CRUDPage = () => {
           }
         />
       )}
-
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
         <button
           onClick={() => setIsRegisterModalOpen(true)}
           className="btn btn-primary"
         >
-          Registrar Admin
+          Registrar Usuario Admin
         </button>
       </div>
-
       <UserTable
         users={filteredUsers}
         onEdit={setSelectedUser}
         onDelete={handleDeleteClick}
       />
-
       {selectedUser && (
         <EditUserModal
           user={selectedUser}

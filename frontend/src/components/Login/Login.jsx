@@ -1,6 +1,9 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { authService } from "../../api/authService";
+import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
   const {
@@ -11,50 +14,42 @@ const Login = () => {
   } = useForm({ mode: "onChange" });
 
   const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [mensajeError, setMensajeError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
 
   const onSubmit = async (data) => {
     try {
-      const response = await fetch(
-        "http://localhost:8080/api/v1/usuarios/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: data.email,
-            password: data.password,
-          }),
+      setMensajeError("");
+      setMensajeExito("Iniciando sesión...");
+
+      // 4. Usamos nuestro servicio para hacer la llamada a la API
+      const responseData = await authService.login(data.email, data.password);
+
+      // 5. Si el login es exitoso, le pasamos el token a nuestro contexto global
+      login(responseData.token);
+
+      reset();
+      setMensajeExito("✅ Inicio de sesión exitoso, redirigiendo...");
+
+      // 6. Redirigimos basándonos en el rol que está DENTRO del token
+      setTimeout(() => {
+        const decodedToken = jwtDecode(responseData.token);
+        // Usamos los roles que definimos en el backend
+        if (
+          decodedToken.role === "ROLE_SUPER_ADMIN" ||
+          decodedToken.role === "ROLE_PRODUCT_MANAGER" ||
+          decodedToken.role === "ROLE_ORDER_MANAGER"
+        ) {
+          navigate("/admin"); // Redirigir a una página de admin genérica
+        } else {
+          navigate("/");
         }
-      );
-
-      if (response.ok) {
-        const userData = await response.json();
-        localStorage.setItem("usuario", JSON.stringify(userData));
-
-        window.dispatchEvent(new Event("userLogin"));
-
-        reset();
-        setMensajeError("");
-        setMensajeExito("✅ Inicio de sesión exitoso, redirigiendo...");
-
-        setTimeout(() => {
-          if (userData.rol === "Administrador") {
-            navigate("/admin");
-          } else {
-            navigate("/");
-          }
-        }, 1500);
-      } else {
-        const errorData = await response.json();
-        setMensajeExito("");
-        setMensajeError(errorData.message || "❌ Credenciales inválidas");
-      }
-    } catch (err) {
+      }, 1500);
+    } catch (error) {
       setMensajeExito("");
-      setMensajeError("⚠️ Error de conexión con el servidor");
+      setMensajeError(`❌ ${error.message || "Credenciales inválidas"}`);
     }
   };
 
@@ -81,7 +76,7 @@ const Login = () => {
               required: "El correo electrónico es requerido",
               pattern: {
                 value:
-                  /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/,
+                  /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9-]*\.)+[a-z]{2,}$/,
                 message: "Correo electrónico inválido",
               },
               minLength: {

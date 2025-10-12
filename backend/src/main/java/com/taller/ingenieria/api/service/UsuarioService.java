@@ -3,6 +3,7 @@ package com.taller.ingenieria.api.service;
 import com.taller.ingenieria.api.dto.request.AdminUsuarioCreateRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioLoginRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
+import com.taller.ingenieria.api.dto.response.RolResponseDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioLoginResponseDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioUpdateRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioPerfilResponseDTO;
@@ -48,4 +49,10 @@ public interface UsuarioService {
      * @return El perfil del usuario recién creado.
      */
     UsuarioPerfilResponseDTO crearUsuarioAdmin(AdminUsuarioCreateRequestDTO requestDTO);
+
+    /**
+     * Obtiene una lista de todos los roles de administrador disponibles.
+     * @return Lista de roles.
+     */
+    List<RolResponseDTO> obtenerRolesDeAdmin();
 }

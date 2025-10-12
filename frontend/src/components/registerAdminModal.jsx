@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { userService } from "../api/userService";
 
 const RegisterAdminModal = ({ onRegister, onClose }) => {
   const {
@@ -8,11 +9,33 @@ const RegisterAdminModal = ({ onRegister, onClose }) => {
     formState: { errors },
   } = useForm({ mode: "onChange" });
 
+  // 1. Estado para guardar la lista de roles y posibles errores
+  const [roles, setRoles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorRoles, setErrorRoles] = useState(null);
+
+  // 2. Usamos useEffect para cargar los roles cuando el modal se monta
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const data = await userService.getAdminRoles();
+        setRoles(data);
+      } catch (error) {
+        setErrorRoles("No se pudieron cargar los roles. Inténtelo de nuevo.");
+        console.error("Error al cargar roles:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoles();
+  }, []); // El array vacío asegura que se ejecute solo una vez
+
   return (
     <dialog id="register_modal" className="modal modal-open">
       <div className="modal-box">
         <form onSubmit={handleSubmit(onRegister)} className="space-y-4">
-          <h3 className="font-bold text-lg">Registrar Nuevo Administrador</h3>
+          <h3 className="font-bold text-lg">Registrar Nuevo Usuario Admin</h3>
 
           <div className="form-control">
             <label className="label">
@@ -88,8 +111,43 @@ const RegisterAdminModal = ({ onRegister, onClose }) => {
             )}
           </div>
 
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Rol</span>
+            </label>
+            {loading ? (
+              <span className="loading loading-spinner"></span>
+            ) : errorRoles ? (
+              <p className="text-red-500">{errorRoles}</p>
+            ) : (
+              <select
+                {...register("idRol", { required: "Debe seleccionar un rol" })}
+                className="select select-bordered w-full"
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Seleccione un rol
+                </option>
+                {roles.map((rol) => (
+                  <option key={rol.id} value={rol.id}>
+                    {rol.descripcion}
+                  </option>
+                ))}
+              </select>
+            )}
+            {errors.idRol && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.idRol.message}
+              </p>
+            )}
+          </div>
+
           <div className="modal-action">
-            <button type="submit" className="btn btn-primary">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading || errorRoles}
+            >
               Registrar
             </button>
             <button type="button" onClick={onClose} className="btn btn-ghost">

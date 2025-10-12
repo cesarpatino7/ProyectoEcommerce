@@ -3,6 +3,7 @@ package com.taller.ingenieria.api.service;
 import com.taller.ingenieria.api.dto.request.AdminUsuarioCreateRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioLoginRequestDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioRegistroRequestDTO;
+import com.taller.ingenieria.api.dto.response.RolResponseDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioLoginResponseDTO;
 import com.taller.ingenieria.api.dto.request.UsuarioUpdateRequestDTO;
 import com.taller.ingenieria.api.dto.response.UsuarioPerfilResponseDTO;
@@ -19,10 +20,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -152,6 +155,22 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
         return mapearAUsuarioPerfilResponseDTO(usuarioGuardado);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RolResponseDTO> obtenerRolesDeAdmin() {
+        return rolRepository.findAll().stream()
+                .filter(rol -> !rol.getDescripcion().equals("ROLE_CUSTOMER"))
+                .map(this::convertirRolADTO)
+                .collect(Collectors.toList());
+    }
+
+    private RolResponseDTO convertirRolADTO(Rol rol) {
+        RolResponseDTO dto = new RolResponseDTO();
+        dto.setId(rol.getId());
+        dto.setDescripcion(rol.getDescripcion());
+        return dto;
     }
 
 

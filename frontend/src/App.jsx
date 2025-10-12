@@ -1,29 +1,15 @@
-import { Route, Routes } from "react-router-dom";
-import HomePage from "./pages/HomePages";
-import RegisterPage from "./pages/RegisterPage";
-import LoginPage from "./pages/LoginPage";
-import HealthCheck from "./components/Home/HealthCheck";
-import Navbar2 from "./components/Navbar/Navbar2";
-import CRUDPage from "./pages/CRUDPage.jsx";
-import ProtectedRoute from "./components/protectedRoute.jsx";
-import ProductPage from "./pages/ProductPage.jsx";
+import React from "react";
+import Navbar from "./components/Navbar/Navbar"; // Usamos nuestro Navbar refactorizado
+import AppRouter from "./routes/AppRouter"; // Importamos nuestro nuevo enrutador
 
 function App() {
   return (
     <>
-      <Navbar2 />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/healthcheck" element={<HealthCheck />} />
-        <Route path="/prueba" element={<ProductPage />} />
-
-        {/* Rutas Protegidas */}
-        <Route element={<ProtectedRoute allowedRoles={["Administrador"]} />}>
-          <Route path="/admin" element={<CRUDPage />} />
-        </Route>
-      </Routes>
+      <Navbar />
+      <main className="container mx-auto p-4">
+        <AppRouter />{" "}
+        {/* El enrutador se encarga de decidir qué página mostrar */}
+      </main>
     </>
   );
 }
