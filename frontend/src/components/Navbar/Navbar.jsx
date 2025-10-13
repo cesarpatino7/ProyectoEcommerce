@@ -116,10 +116,16 @@ const Navbar = () => {
                   )}
 
                   {/* Lógica para mostrar enlaces de admin */}
-                  {(user.role === "ROLE_SUPER_ADMIN" ||
-                    user.role === "ROLE_PRODUCT_MANAGER") && (
+                  {/* Enlace Admin Productos eliminado por petición del usuario */}
+                  {/* Enlace exclusivo para encargado de inventario */}
+                  {(user.role === "ROLE_PRODUCT_MANAGER" || user.role === "ROLE_SUPER_ADMIN") && (
                     <li>
-                      <Link to="/admin/productos">Admin Productos</Link>
+                      <Link to="/agregar-producto">Agregar Producto</Link>
+                    </li>
+                  )}
+                  {(user.role === "ROLE_PRODUCT_MANAGER" || user.role === "ROLE_SUPER_ADMIN") && (
+                    <li>
+                      <Link to="/inventario">Inventario</Link>
                     </li>
                   )}
                   <div className="divider my-1"></div>
