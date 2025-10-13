@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import UserTable from "../components/userTable";
 import EditUserModal from "../components/EditUserModal";
 import RegisterAdminModal from "../components/RegisterAdminModal";
@@ -20,6 +21,17 @@ const CRUDPage = () => {
 
   // 2. Obtenemos el usuario actual de nuestro contexto global
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  // Roles permitidos para ver esta página de gestión
+  const ADMIN_ONLY = ["ROLE_SUPER_ADMIN", "ROLE_ORDER_MANAGER"];
+
+  useEffect(() => {
+    // Si el usuario no tiene los roles admin, lo redirigimos a Home
+    if (currentUser && !ADMIN_ONLY.includes(currentUser.role)) {
+      navigate('/', { replace: true });
+    }
+  }, [currentUser, navigate]);
 
   const showNotification = (message, type = "error") => {
     setNotification({ show: true, message, type });
