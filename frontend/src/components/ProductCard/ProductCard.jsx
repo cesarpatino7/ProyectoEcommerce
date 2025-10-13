@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useNotification } from "../../context/NotificationContext";
 
-const ProductCard = ({ id, name, image, price }) => {
+const ProductCard = ({ id, name, image, price, stock }) => {
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
 
@@ -19,10 +19,14 @@ const ProductCard = ({ id, name, image, price }) => {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    // Agregar el producto al carrito usando el contexto
-    addItem({ id, nombre: name, precio: price, imagen: image }, quantity);
-    // Mostrar notificación
-    showNotification(`Agregaste ${quantity} × ${name} al carrito`, "success");
+    if ((stock ?? 0) <= 0) {
+      showNotification(`No hay stock disponible de ${name}`, 'error');
+      return;
+    }
+    // Limitar cantidad al stock disponible
+    const qty = Math.min(quantity, stock ?? quantity);
+    addItem({ id, nombre: name, precio: price, imagen: image }, qty);
+    showNotification(`Agregaste ${qty} × ${name} al carrito`, "success");
   };
 
   // cart
@@ -82,12 +86,16 @@ const ProductCard = ({ id, name, image, price }) => {
           </button>
         </div>
 
-        <button
-          className="add-to-cart btn btn-primary btn-sm mt-2 w-full"
-          onClick={handleAddToCart}
-        >
-          🛒 Agregar
-        </button>
+        { (stock ?? 0) > 0 ? (
+          <button
+            className="add-to-cart btn btn-primary btn-sm mt-2 w-full"
+            onClick={handleAddToCart}
+          >
+            🛒 Agregar
+          </button>
+        ) : (
+          <button className="btn btn-disabled btn-sm mt-2 w-full">Sin stock</button>
+        )}
       </div>
     </div>
   );
