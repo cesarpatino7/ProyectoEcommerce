@@ -23,9 +23,21 @@ const deleteAddress = async (id) => {
   return resp.data;
 };
 
+const getDepartamentos = async () => {
+  const resp = await apiClient.get("/departamentos");
+  return resp.data;
+};
+
+const getCiudadesPorDepartamento = async (idDepartamento) => {
+  const resp = await apiClient.get(`/ciudades/departamento/${idDepartamento}`);
+  return resp.data;
+};
+
 export default {
   getMyAddresses,
   createAddress,
   updateAddress,
   deleteAddress,
+  getDepartamentos,
+  getCiudadesPorDepartamento,
 };
