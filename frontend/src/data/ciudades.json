@@ -1,0 +1,5 @@
+[
+  { "id": 1, "nombre": "Asunción", "departamento": "Central" },
+  { "id": 15, "nombre": "San Lorenzo", "departamento": "Central" },
+  { "id": 20, "nombre": "Ciudad del Este", "departamento": "Alto Paraná" }
+]
