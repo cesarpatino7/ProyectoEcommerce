@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+import { useNotification } from "../../context/NotificationContext";
 
 const ProductCard = ({ id, name, image, price }) => {
   const navigate = useNavigate();
@@ -17,10 +19,15 @@ const ProductCard = ({ id, name, image, price }) => {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    console.log(
-      `Agregando ${quantity} unidad(es) del producto ${id} al carrito`
-    );
+    // Agregar el producto al carrito usando el contexto
+    addItem({ id, nombre: name, precio: price, imagen: image }, quantity);
+    // Mostrar notificación
+    showNotification(`Agregaste ${quantity} × ${name} al carrito`, "success");
   };
+
+  // cart
+  const { addItem } = useCart();
+  const { show: showNotification } = useNotification();
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat("es-PY", {

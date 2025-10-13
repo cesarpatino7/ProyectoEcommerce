@@ -1,15 +1,28 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { authService } from "../../api/authService";
+import { useCart } from "../../context/CartContext";
+import { useNotification } from "../../context/NotificationContext";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { cartItems, totalItems, totalPrice, removeItem } = useCart();
+  const { show } = useNotification();
 
   const handleLogout = async () => {
     await authService.logout();
     logout();
     navigate("/");
+  };
+
+  const closeDropdown = () => {
+    try {
+      const active = document.activeElement;
+      if (active && typeof active.blur === 'function') active.blur();
+    } catch (e) {
+      // noop
+    }
   };
 
   return (
@@ -22,6 +35,46 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Mini-dropdown del carrito (preview) */}
+          <div className="dropdown dropdown-end">
+            <label tabIndex={0} className="btn btn-ghost relative">
+              <span>🛒</span>
+              {totalItems > 0 && (
+                <span className="badge badge-sm badge-primary absolute -top-2 -right-3">{totalItems}</span>
+              )}
+            </label>
+            <ul tabIndex={0} className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-80">
+              {(!cartItems || cartItems.length === 0) ? (
+                <li className="p-2 text-center">Tu carrito está vacío</li>
+              ) : (
+                cartItems.slice(0, 3).map((item) => (
+                  <li key={item.id} className="p-2">
+                    <div className="flex items-center gap-3">
+                      <img src={item.imagen || item.image} alt={item.nombre || item.name} className="w-12 h-12 object-contain" />
+                      <div className="flex-1">
+                        <div className="font-semibold text-sm">{item.nombre || item.name}</div>
+                        <div className="text-xs text-gray-600">{item.quantity} × {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(item.precio ?? item.price ?? 0)}</div>
+                      </div>
+                      <button className="text-red-600 text-sm" onClick={() => { removeItem(item.id); show(`Eliminaste ${item.nombre || item.name} del carrito`, 'success'); }}>Eliminar</button>
+                    </div>
+                  </li>
+                ))
+              )}
+
+              <div className="divider my-1" />
+
+              <li className="p-2 flex justify-between items-center">
+                <span className="text-sm">Total</span>
+                <span className="font-semibold">{new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(totalPrice)}</span>
+              </li>
+
+              <li className="p-2 grid grid-cols-2 gap-2">
+                <Link to="/cart" className="btn btn-sm btn-outline" onClick={() => closeDropdown()}>Ver carrito</Link>
+                <button className="btn btn-sm btn-primary" onClick={() => { closeDropdown(); navigate('/cart'); }}>Pagar</button>
+              </li>
+            </ul>
+          </div>
+          
           {user ? (
             <>
               <div className="dropdown dropdown-end">
