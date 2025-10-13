@@ -81,10 +81,10 @@ const Navbar = () => {
           ) : (
             // --- VISTA CUANDO EL USUARIO NO ESTÁ LOGUEADO ---
             <>
-              <Link to="/login" className="btn btn-primary">
+              <Link to="/login" className="bg-blue-950 border rounded border-blue-950 text-white font-bold py-2 px-4 hover:scale-[1.1] transition-transform cursor-pointer mx-auto w-auto">
                 Iniciar sesión
               </Link>
-              <Link to="/register" className="btn btn-ghost">
+              <Link to="/register" className="bg-gray-300 border rounded border-gray-300 text-gray-800 font-bold py-2 px-4 hover:scale-[1.1] transition-transform cursor-pointer mx-auto w-auto">
                 Crear cuenta
               </Link>
             </>

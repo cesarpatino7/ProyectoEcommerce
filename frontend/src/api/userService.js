@@ -73,10 +73,39 @@ const getAdminRoles = async () => {
   }
 };
 
+/**
+ * Obtiene el perfil del usuario autenticado.
+ * Endpoint: GET /api/v1/me/profile
+ */
+const getMyProfile = async () => {
+  try {
+    const response = await apiClient.get("/me/profile");
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Error al obtener el perfil" };
+  }
+};
+
+/**
+ * Actualiza el perfil del usuario autenticado (solo campos permitidos por la API).
+ * Endpoint: PUT /api/v1/me/profile
+ * @param {object} profileData - { nombre, apellido, telefono }
+ */
+const updateMyProfile = async (profileData) => {
+  try {
+    const response = await apiClient.put("/me/profile", profileData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Error al actualizar el perfil" };
+  }
+};
+
 export const userService = {
   getAllUsers,
   createUser,
   updateUser,
   deleteUser,
   getAdminRoles,
+  getMyProfile,
+  updateMyProfile,
 };
