@@ -16,7 +16,6 @@ import CartPage from "../pages/CartPage";
 // Definimos los roles de administrador en una constante para mantenerlo limpio
 const ADMIN_ROLES = [
   "ROLE_SUPER_ADMIN",
-  "ROLE_PRODUCT_MANAGER",
   "ROLE_ORDER_MANAGER",
 ];
 

@@ -128,6 +128,12 @@ const Navbar = () => {
                       <Link to="/inventario">Inventario</Link>
                     </li>
                   )}
+                  {/* Enlace a Gestión de Usuarios visible solo para Super Admin */}
+                  {user.role === "ROLE_SUPER_ADMIN" && (
+                    <li>
+                      <Link to="/admin">Gestión de Usuarios</Link>
+                    </li>
+                  )}
                   <div className="divider my-1"></div>
                   <li>
                     <button onClick={handleLogout} className="text-red-600">
