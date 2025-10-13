@@ -1,151 +1,149 @@
-import { useState, useMemo } from 'react';
-import ProductCard from '../ProductCard/ProductCard';
-import ProductFilters from '../ProductFilters/ProductFilters';
-import SearchBar from '../SearchBar/SearchBar';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import ProductCard from "../ProductCard/ProductCard";
+import ProductFilters from "../ProductFilters/ProductFilters";
+import SearchBar from "../SearchBar/SearchBar";
+import Pagination from "../Pagination/Pagination";
+import { useProducts } from "../../hooks/useProducts";
 
 const Home = () => {
-    const initialFilters = {
-        priceRange: [0, 1000000],
-        gender: '',
-        brand: '',
-        searchTerm: ''
+  const initialFilters = {
+    priceRange: [0, 1000000],
+    category: "",
+    searchTerm: "",
+  };
+
+  const { products, isLoading, error, pageInfo, fetchProducts } = useProducts();
+  const [filters, setFilters] = useState(initialFilters);
+  const [currentPage, setCurrentPage] = useState(0);
+
+  const executeFetch = useCallback(() => {
+    const params = {
+      page: currentPage,
+      size: 12,
+      sort: "nombre,asc",
+      busqueda: filters.searchTerm || null,
+      categoria: filters.category || null,
     };
 
-    // Datos de ejemplo - Después los obtendremos del backend
-    const [products] = useState([
-        {
-            id: 1,
-            name: "VERSACE EROS",
-            price: 99.99,
-            image: "https://ss881.suburbia.com.mx/xl/5011408721.jpg",
-            gender: "masculino",
-            brand: "versace"
-        },
-        {
-            id: 2,
-            name: "DOLCE & GABBANA LIGHT BLUE",
-            price: 85.50,
-            image: "https://falabella.scene7.com/is/image/FalabellaPE/882125365_1",
-            gender: "femenino",
-            brand: "dolce & gabbana"
-        },
-        {
-            id: 3,
-            name: "CAROLINA HERRERA 212 VIP",
-            price: 110.00,
-            image: "https://falabella.scene7.com/is/image/FalabellaPE/881952283_1",
-            gender: "femenino",
-            brand: "carolina herrera"
-        },
-        {
-            id: 4,
-            name: "CHANEL N°5",
-            price: 130.00,
-            image: "https://odomo.pe/wp-content/uploads/2022/12/CHANEL-N%C2%B05-EAU-DE-PARFUM-SPRAY.webp",
-            gender: "femenino",
-            brand: "chanel"
-        },
-        {
-            id: 5,
-            name: "HUGO BOSS BOTTLED",
-            price: 89.99,
-            image: "https://falabella.scene7.com/is/image/FalabellaPE/881858070_1",
-            gender: "masculino",
-            brand: "hugo boss"
-        },
-        {
-            id: 6,
-            name: "DIOR SAUVAGE",
-            price: 120.00,
-            image: "https://falabella.scene7.com/is/image/FalabellaPE/882069165_1",
-            gender: "masculino",
-            brand: "dior"
-        }
-    ]);
-
-    const [filters, setFilters] = useState(initialFilters);
-
-    const handleFilterChange = (filterName, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [filterName]: value
-        }));
-    };
-
-    const filteredProducts = useMemo(() => {
-        return products.filter(product => {
-            // Filtro por búsqueda
-            if (filters.searchTerm) {
-                const searchLower = filters.searchTerm.toLowerCase();
-                const matchesSearch = 
-                    product.name.toLowerCase().includes(searchLower) ||
-                    product.brand.toLowerCase().includes(searchLower);
-                
-                if (!matchesSearch) {
-                    return false;
-                }
-            }
-
-            // Filtro por rango de precio
-            if (filters.priceRange && Array.isArray(filters.priceRange)) {
-                const [min, max] = filters.priceRange;
-                const priceInGuaranies = product.price * 7300;
-                if (priceInGuaranies < min || priceInGuaranies > max) {
-                    return false;
-                }
-            }
-
-            // Filtro por género
-            if (filters.gender && product.gender !== filters.gender) {
-                return false;
-            }
-
-            // Filtro por marca
-            if (filters.brand && product.brand !== filters.brand) {
-                return false;
-            }
-
-            return true;
-        });
-    }, [products, filters]);
-
-    return (
-        <div className="container mx-auto px-4 py-8">
-            {/* Buscador */}
-            <SearchBar 
-                onSearch={(term) => handleFilterChange('searchTerm', term)}
-            />
-            
-            {/* Filtros */}
-            <ProductFilters 
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onReset={() => setFilters(initialFilters)}
-            />
-
-            {/* Grilla de productos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredProducts.map((product) => (
-                    <ProductCard
-                        key={product.id}
-                        id={product.id}
-                        name={product.name}
-                        image={product.image}
-                        price={product.price}
-                    />
-                ))}
-            </div>
-            
-            {/* Mensaje cuando no hay resultados */}
-            {filteredProducts.length === 0 && (
-                <div className="text-center py-8">
-                    <p className="text-gray-600 text-lg">
-                        No se encontraron productos que coincidan con los filtros seleccionados
-                    </p>
-                </div>
-            )}
-        </div>
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v != null && v !== "")
     );
-}
+
+    fetchProducts(cleanParams);
+  }, [filters.searchTerm, filters.category, currentPage, fetchProducts]);
+
+  useEffect(() => {
+    const debounceFetch = setTimeout(() => {
+      executeFetch();
+    }, 300);
+
+    return () => clearTimeout(debounceFetch);
+  }, [executeFetch]);
+
+  const filteredProducts = useMemo(() => {
+    const [min, max] = filters.priceRange;
+
+    if (!products || products.length === 0) {
+      return [];
+    }
+
+    return products.filter((product) => {
+      const price = product.precio;
+      return price >= min && price <= max;
+    });
+  }, [products, filters.priceRange]);
+
+  const handleFilterChange = (filterName, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterName]: value,
+    }));
+    if (filterName !== "priceRange") {
+      setCurrentPage(0);
+    }
+  };
+
+  const handleSearch = (term) => {
+    handleFilterChange("searchTerm", term);
+  };
+
+  const handleResetFilters = () => {
+    setFilters(initialFilters);
+    setCurrentPage(0);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div role="alert" className="alert alert-error">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>
+          Error: {error.message || "No se pudieron cargar los productos."}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <SearchBar onSearch={handleSearch} />
+
+      <ProductFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {filteredProducts.map((product) => (
+          <ProductCard
+            key={product.id}
+            id={product.id}
+            name={product.nombre}
+            image={product.imagen}
+            price={product.precio}
+          />
+        ))}
+      </div>
+
+      {filteredProducts.length === 0 && !isLoading && (
+        <div className="text-center py-8 col-span-full">
+          <p className="text-gray-600 text-lg">
+            No se encontraron productos que coincidan con los filtros.
+          </p>
+        </div>
+      )}
+
+      <Pagination
+        currentPage={pageInfo.number}
+        totalPages={pageInfo.totalPages}
+        onPageChange={handlePageChange}
+      />
+    </div>
+  );
+};
 
 export default Home;
