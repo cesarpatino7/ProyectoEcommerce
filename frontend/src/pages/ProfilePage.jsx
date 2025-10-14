@@ -126,370 +126,402 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold">Mi Perfil</h1>
-        <div className="mt-4">Cargando...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">Cargando perfil...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold">Mi Perfil</h1>
-
-      {profile ? (
-        <div className="mt-4 max-w-md">
-          {/* Email (solo lectura) */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <div className="mt-1 text-gray-800">{profile.email}</div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-8 w-8 text-white"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">Mi Perfil</h1>
+                <p className="text-gray-600 mt-1">
+                  Administra tu información personal
+                </p>
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* Mostrar formulario de edición o datos */}
-          {editing ? (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Nombre
-                </label>
-                <input
-                  {...register("nombre", { required: true, minLength: 2 })}
-                  className="mt-1 block w-full border rounded p-2"
-                />
-              </div>
+        {profile ? (
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            {/* Email (solo lectura) */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <div className="mt-1 text-gray-800">{profile.email}</div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Apellido
-                </label>
-                <input
-                  {...register("apellido", { required: true, minLength: 2 })}
-                  className="mt-1 block w-full border rounded p-2"
-                />
-              </div>
+            {/* Mostrar formulario de edición o datos */}
+            {editing ? (
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Nombre
+                  </label>
+                  <input
+                    {...register("nombre", { required: true, minLength: 2 })}
+                    className="mt-1 block w-full border rounded p-2"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Teléfono
-                </label>
-                <input
-                  {...register("telefono", {
-                    required: false,
-                    pattern: {
-                      value: /^\+?[0-9\s\-]{7,10}$/,
-                      message: "Teléfono inválido. Use entre 7 y 10 dígitos.",
-                    },
-                  })}
-                  className="mt-1 block w-full border rounded p-2"
-                />
-                {errors.telefono && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.telefono.message}
-                  </p>
-                )}
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Apellido
+                  </label>
+                  <input
+                    {...register("apellido", { required: true, minLength: 2 })}
+                    className="mt-1 block w-full border rounded p-2"
+                  />
+                </div>
 
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={!isValid}
-                  className="bg-blue-950 border rounded border-blue-950 text-white font-bold py-2 px-4 hover:scale-[1.1] transition-transform cursor-pointer mx-auto w-50"
-                >
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    reset({
-                      nombre: profile.nombre || "",
-                      apellido: profile.apellido || "",
-                      telefono: profile.telefono || "",
-                    });
-                    setEditing(false);
-                  }}
-                  className="bg-gray-300 border rounded border-gray-300 text-gray-800 font-bold py-2 px-4 hover:scale-[1.1] transition-transform cursor-pointer mx-auto w-50"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="space-y-2">
-              <div>
-                <strong>Nombre:</strong> {profile.nombre}
-              </div>
-              <div>
-                <strong>Apellido:</strong> {profile.apellido}
-              </div>
-              <div>
-                <strong>Teléfono:</strong> {profile.telefono || "-"}
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Teléfono
+                  </label>
+                  <input
+                    {...register("telefono", {
+                      required: false,
+                      pattern: {
+                        value: /^\+?[0-9\s\-]{7,10}$/,
+                        message: "Teléfono inválido. Use entre 7 y 10 dígitos.",
+                      },
+                    })}
+                    className="mt-1 block w-full border rounded p-2"
+                  />
+                  {errors.telefono && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.telefono.message}
+                    </p>
+                  )}
+                </div>
 
-              <div className="mt-4">
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setEditing(true)}
+                    type="submit"
+                    disabled={!isValid}
                     className="bg-blue-950 border rounded border-blue-950 text-white font-bold py-2 px-4 hover:scale-[1.1] transition-transform cursor-pointer mx-auto w-50"
                   >
-                    Editar
+                    Guardar
                   </button>
-
                   <button
-                    onClick={() => setShowAddresses((s) => !s)}
-                    className="bg-green-600 border rounded border-green-600 text-white font-bold py-2 px-4 hover:scale-[1.05] transition-transform cursor-pointer mx-auto w-50"
+                    type="button"
+                    onClick={() => {
+                      reset({
+                        nombre: profile.nombre || "",
+                        apellido: profile.apellido || "",
+                        telefono: profile.telefono || "",
+                      });
+                      setEditing(false);
+                    }}
+                    className="bg-gray-300 border rounded border-gray-300 text-gray-800 font-bold py-2 px-4 hover:scale-[1.1] transition-transform cursor-pointer mx-auto w-50"
                   >
-                    Mis direcciones
+                    Cancelar
                   </button>
                 </div>
+              </form>
+            ) : (
+              <div className="space-y-2">
+                <div>
+                  <strong>Nombre:</strong> {profile.nombre}
+                </div>
+                <div>
+                  <strong>Apellido:</strong> {profile.apellido}
+                </div>
+                <div>
+                  <strong>Teléfono:</strong> {profile.telefono || "-"}
+                </div>
+
+                <div className="mt-4">
+                  <div className="flex gap-2 items-center">
+                    <button
+                      onClick={() => setEditing(true)}
+                      className="bg-blue-950 border rounded border-blue-950 text-white font-bold py-2 px-4 hover:scale-[1.1] transition-transform cursor-pointer mx-auto w-50"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      onClick={() => setShowAddresses((s) => !s)}
+                      className="bg-green-600 border rounded border-green-600 text-white font-bold py-2 px-4 hover:scale-[1.05] transition-transform cursor-pointer mx-auto w-50"
+                    >
+                      Mis direcciones
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="mt-4">No se encontró el perfil del usuario.</div>
-      )}
+            )}
+          </div>
+        ) : (
+          <div className="mt-4">No se encontró el perfil del usuario.</div>
+        )}
 
-      {/* Sección de Mis Direcciones */}
-      {showAddresses && (
-        <div className="mt-6 max-w-2xl">
-          <h2 className="text-2xl font-semibold mb-3">Mis direcciones</h2>
+        {/* Sección de Mis Direcciones */}
+        {showAddresses && (
+          <div className="mt-6 max-w-2xl">
+            <h2 className="text-2xl font-semibold mb-3">Mis direcciones</h2>
 
-          {loadingAddresses ? (
-            <div>Cargando direcciones...</div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <button
-                  onClick={() => {
-                    setAddressEditingId(null);
-                    resetAddress({ descripcionCalle: "", idCiudad: "" });
-                    setShowAddressForm(true);
-                  }}
-                  className="bg-blue-700 text-white py-2 px-4 rounded"
-                >
-                  Nueva dirección
-                </button>
-              </div>
-
-              {/* Formulario para crear/editar */}
-              {showAddressForm && (
-                <form
-                  onSubmit={handleSubmitAddress(async (vals) => {
-                    try {
-                      if (addressEditingId) {
-                        await addressService.updateAddress(addressEditingId, {
-                          descripcionCalle: vals.descripcionCalle,
-                          idCiudad: Number(vals.idCiudad),
-                        });
-                        // actualizar en lista
-                        const updated = await addressService.getMyAddresses();
-                        setAddresses(updated || []);
-                        setAddressEditingId(null);
-                        setShowAddressForm(false);
-                        show("Dirección actualizada exitosamente", "success");
-                      } else {
-                        await addressService.createAddress({
-                          descripcionCalle: vals.descripcionCalle,
-                          idCiudad: Number(vals.idCiudad),
-                        });
-                        const updated = await addressService.getMyAddresses();
-                        setAddresses(updated || []);
-                        setShowAddressForm(false);
-                        show("Dirección creada exitosamente", "success");
-                      }
+            {loadingAddresses ? (
+              <div>Cargando direcciones...</div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <button
+                    onClick={() => {
+                      setAddressEditingId(null);
                       resetAddress({ descripcionCalle: "", idCiudad: "" });
-                      setSelectedDepartamento("");
-                    } catch (err) {
-                      console.error("Error guardar dirección:", err);
-                      show(
-                        err.message || "No se pudo guardar la dirección",
-                        "error"
-                      );
-                    }
-                  })}
-                  className="space-y-3"
-                >
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Descripción de la calle
-                    </label>
-                    <input
-                      {...regAddress("descripcionCalle", {
-                        required: "La descripción es obligatoria",
-                      })}
-                      className="mt-1 block w-full border rounded p-2"
-                    />
-                    {errorsAddress.descripcionCalle && (
-                      <p className="text-red-500 text-sm">
-                        {errorsAddress.descripcionCalle.message}
-                      </p>
-                    )}
-                  </div>
+                      setShowAddressForm(true);
+                    }}
+                    className="bg-blue-700 text-white py-2 px-4 rounded"
+                  >
+                    Nueva dirección
+                  </button>
+                </div>
 
-                  <div>
-                    {/* Departamento */}
-                    <label className="block text-sm font-medium">
-                      Seleccione un departamento
-                    </label>
-                    <select
-                      value={selectedDepartamento}
-                      onChange={(e) => setSelectedDepartamento(e.target.value)}
-                      className="mt-1 block w-full border rounded p-2"
-                    >
-                      <option value="">-- Seleccione departamento --</option>
-                      {departamentos.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.nombre}
-                        </option>
-                      ))}
-                    </select>
-                    <label className="block text-sm font-medium">
-                      Seleccionar ciudad
-                    </label>
-                    {/* Ciudad */}
-                    <select
-                      {...regAddress("idCiudad", {
-                        required: "Seleccione una ciudad",
-                      })}
-                      className="mt-1 block w-full border rounded p-2"
-                      disabled={!selectedDepartamento}
-                    >
-                      <option value="">-- Seleccione ciudad --</option>
-                      {ciudades.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.nombre}
-                        </option>
-                      ))}
-                    </select>
-                    {errorsAddress.idCiudad && (
-                      <p className="text-red-500 text-sm">
-                        {errorsAddress.idCiudad.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      disabled={!isAddressValid}
-                      className="bg-blue-600 text-white py-2 px-4 rounded"
-                    >
-                      {addressEditingId ? "Actualizar" : "Crear"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
+                {/* Formulario para crear/editar */}
+                {showAddressForm && (
+                  <form
+                    onSubmit={handleSubmitAddress(async (vals) => {
+                      try {
+                        if (addressEditingId) {
+                          await addressService.updateAddress(addressEditingId, {
+                            descripcionCalle: vals.descripcionCalle,
+                            idCiudad: Number(vals.idCiudad),
+                          });
+                          // actualizar en lista
+                          const updated = await addressService.getMyAddresses();
+                          setAddresses(updated || []);
+                          setAddressEditingId(null);
+                          setShowAddressForm(false);
+                          show("Dirección actualizada exitosamente", "success");
+                        } else {
+                          await addressService.createAddress({
+                            descripcionCalle: vals.descripcionCalle,
+                            idCiudad: Number(vals.idCiudad),
+                          });
+                          const updated = await addressService.getMyAddresses();
+                          setAddresses(updated || []);
+                          setShowAddressForm(false);
+                          show("Dirección creada exitosamente", "success");
+                        }
                         resetAddress({ descripcionCalle: "", idCiudad: "" });
-                        setAddressEditingId(null);
-                        setShowAddressForm(false);
-                      }}
-                      className="bg-gray-300 py-2 px-4 rounded"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              )}
+                        setSelectedDepartamento("");
+                      } catch (err) {
+                        console.error("Error guardar dirección:", err);
+                        show(
+                          err.message || "No se pudo guardar la dirección",
+                          "error"
+                        );
+                      }
+                    })}
+                    className="space-y-3"
+                  >
+                    <div>
+                      <label className="block text-sm font-medium">
+                        Descripción de la calle
+                      </label>
+                      <input
+                        {...regAddress("descripcionCalle", {
+                          required: "La descripción es obligatoria",
+                        })}
+                        className="mt-1 block w-full border rounded p-2"
+                      />
+                      {errorsAddress.descripcionCalle && (
+                        <p className="text-red-500 text-sm">
+                          {errorsAddress.descripcionCalle.message}
+                        </p>
+                      )}
+                    </div>
 
-              {/* Lista de direcciones */}
-              <div className="mt-4">
-                {addresses.length === 0 ? (
-                  <div>No tienes direcciones guardadas.</div>
-                ) : (
-                  <ul className="space-y-2">
-                    {addresses.map((a) => (
-                      <li
-                        key={a.id}
-                        className="p-3 border rounded flex justify-between items-start"
+                    <div>
+                      {/* Departamento */}
+                      <label className="block text-sm font-medium">
+                        Seleccione un departamento
+                      </label>
+                      <select
+                        value={selectedDepartamento}
+                        onChange={(e) =>
+                          setSelectedDepartamento(e.target.value)
+                        }
+                        className="mt-1 block w-full border rounded p-2"
                       >
-                        <div>
-                          <div className="font-medium">
-                            {a.descripcionCalle}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {a.nombreCiudad} - {a.nombreDepartamento}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setAddressEditingId(a.id);
-                              // intentar encontrar id por a.idCiudad o por nombreCiudad
-                              let idCiudadVal = "";
-                              if (a.idCiudad) {
-                                idCiudadVal = String(a.idCiudad);
-                              } else if (a.nombreCiudad) {
-                                const found = ciudadesData.find(
-                                  (c) =>
-                                    c.nombre.toLowerCase() ===
-                                    String(a.nombreCiudad).toLowerCase()
-                                );
-                                if (found) idCiudadVal = String(found.id);
-                              }
-                              resetAddress({
-                                descripcionCalle: a.descripcionCalle,
-                                idCiudad: idCiudadVal,
-                              });
-                              setShowAddressForm(true);
-                            }}
-                            className="bg-yellow-500 text-white py-1 px-3 rounded"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={async () => {
-                              if (
-                                !window.confirm(
-                                  "¿Estás seguro de eliminar esta dirección?"
-                                )
-                              ) {
-                                return;
-                              }
-                              try {
-                                await addressService.deleteAddress(a.id);
-                                setAddresses((prev) =>
-                                  prev.filter((x) => x.id !== a.id)
-                                );
-                                show(
-                                  "Dirección eliminada exitosamente",
-                                  "success"
-                                );
-                              } catch (err) {
-                                console.error(
-                                  "Error al eliminar dirección:",
-                                  err
-                                );
-                                // Intentar obtener el mensaje del servidor
-                                let errorMsg =
-                                  "No se pudo eliminar la dirección";
+                        <option value="">-- Seleccione departamento --</option>
+                        {departamentos.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.nombre}
+                          </option>
+                        ))}
+                      </select>
+                      <label className="block text-sm font-medium">
+                        Seleccionar ciudad
+                      </label>
+                      {/* Ciudad */}
+                      <select
+                        {...regAddress("idCiudad", {
+                          required: "Seleccione una ciudad",
+                        })}
+                        className="mt-1 block w-full border rounded p-2"
+                        disabled={!selectedDepartamento}
+                      >
+                        <option value="">-- Seleccione ciudad --</option>
+                        {ciudades.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nombre}
+                          </option>
+                        ))}
+                      </select>
+                      {errorsAddress.idCiudad && (
+                        <p className="text-red-500 text-sm">
+                          {errorsAddress.idCiudad.message}
+                        </p>
+                      )}
+                    </div>
 
-                                if (err.response?.data?.message) {
-                                  errorMsg = err.response.data.message;
-                                } else if (err.response?.data?.error) {
-                                  errorMsg = err.response.data.error;
-                                } else if (err.message) {
-                                  errorMsg = err.message;
-                                }
-
-                                show(errorMsg, "error");
-                              }
-                            }}
-                            className="bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700"
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={!isAddressValid}
+                        className="bg-blue-600 text-white py-2 px-4 rounded"
+                      >
+                        {addressEditingId ? "Actualizar" : "Crear"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetAddress({ descripcionCalle: "", idCiudad: "" });
+                          setAddressEditingId(null);
+                          setShowAddressForm(false);
+                        }}
+                        className="bg-gray-300 py-2 px-4 rounded"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
                 )}
+
+                {/* Lista de direcciones */}
+                <div className="mt-4">
+                  {addresses.length === 0 ? (
+                    <div>No tienes direcciones guardadas.</div>
+                  ) : (
+                    <ul className="space-y-2">
+                      {addresses.map((a) => (
+                        <li
+                          key={a.id}
+                          className="p-3 border rounded flex justify-between items-start"
+                        >
+                          <div>
+                            <div className="font-medium">
+                              {a.descripcionCalle}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {a.nombreCiudad} - {a.nombreDepartamento}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setAddressEditingId(a.id);
+                                // intentar encontrar id por a.idCiudad o por nombreCiudad
+                                let idCiudadVal = "";
+                                if (a.idCiudad) {
+                                  idCiudadVal = String(a.idCiudad);
+                                } else if (a.nombreCiudad) {
+                                  const found = ciudadesData.find(
+                                    (c) =>
+                                      c.nombre.toLowerCase() ===
+                                      String(a.nombreCiudad).toLowerCase()
+                                  );
+                                  if (found) idCiudadVal = String(found.id);
+                                }
+                                resetAddress({
+                                  descripcionCalle: a.descripcionCalle,
+                                  idCiudad: idCiudadVal,
+                                });
+                                setShowAddressForm(true);
+                              }}
+                              className="bg-yellow-500 text-white py-1 px-3 rounded"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (
+                                  !window.confirm(
+                                    "¿Estás seguro de eliminar esta dirección?"
+                                  )
+                                ) {
+                                  return;
+                                }
+                                try {
+                                  await addressService.deleteAddress(a.id);
+                                  setAddresses((prev) =>
+                                    prev.filter((x) => x.id !== a.id)
+                                  );
+                                  show(
+                                    "Dirección eliminada exitosamente",
+                                    "success"
+                                  );
+                                } catch (err) {
+                                  console.error(
+                                    "Error al eliminar dirección:",
+                                    err
+                                  );
+                                  // Intentar obtener el mensaje del servidor
+                                  let errorMsg =
+                                    "No se pudo eliminar la dirección";
+
+                                  if (err.response?.data?.message) {
+                                    errorMsg = err.response.data.message;
+                                  } else if (err.response?.data?.error) {
+                                    errorMsg = err.response.data.error;
+                                  } else if (err.message) {
+                                    errorMsg = err.message;
+                                  }
+
+                                  show(errorMsg, "error");
+                                }
+                              }}
+                              className="bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
