@@ -3,12 +3,17 @@ import { productService } from '../api/productService';
 import { inventoryService } from '../api/inventoryService';
 import { adminProductService } from '../api/adminProductService';
 import { useNotification } from '../context/NotificationContext';
+import { useCategories } from '../hooks/useCategories';
 
 const InventoryPage = () => {
   const [productos, setProductos] = useState([]);
   const [editing, setEditing] = useState(null); // idProducto en edición
   const [nuevoStock, setNuevoStock] = useState('');
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingCategoryId, setEditingCategoryId] = useState('');
+  const [editingCategories, setEditingCategories] = useState([]);
   const { show } = useNotification();
+  const { categories, isLoading: categoriesLoading } = useCategories();
 
   useEffect(() => {
     const load = async () => {
@@ -42,14 +47,43 @@ const InventoryPage = () => {
     load();
   }, []);
 
-  const startEdit = (id, currentStock) => {
+  const startEdit = (id, currentStock, producto) => {
     setEditing(id);
     setNuevoStock(currentStock ?? 0);
+    setEditingProduct(producto || null);
+
+    // Inicializar categoría seleccionada a partir del producto
+    try {
+        // Si el producto trae ids de categorías, inicializar el array con ellos
+        if (producto && Array.isArray(producto.categoriaIds) && producto.categoriaIds.length > 0) {
+          setEditingCategories(producto.categoriaIds.map(Number));
+          return;
+        }
+
+      // Si el producto trae nombres de categorías en producto.categorias (string o array), mapear a id
+      let nombres = [];
+      if (producto) {
+        if (Array.isArray(producto.categorias)) nombres = producto.categorias;
+        else if (typeof producto.categorias === 'string') nombres = producto.categorias.split(',').map(s => s.trim()).filter(Boolean);
+      }
+
+      if (nombres.length > 0 && categories && categories.length > 0) {
+        const ids = categories.filter(c => nombres.includes(c.nombre)).map(c => c.id);
+        setEditingCategories(ids);
+      } else {
+        setEditingCategories([]);
+      }
+    } catch (e) {
+      setEditingCategoryId('');
+    }
   };
 
   const cancelEdit = () => {
     setEditing(null);
     setNuevoStock('');
+    setEditingProduct(null);
+    setEditingCategoryId('');
+    setEditingCategories([]);
   };
 
 
@@ -93,6 +127,30 @@ const InventoryPage = () => {
         // Fallback: emitir sólo id/stock
         try { window.dispatchEvent(new CustomEvent('stockUpdated', { detail: { id: producto.id, stock: resp.data.stockActual } })); } catch (e2) {}
       }
+      // Si se seleccionó categoría en la edición, enviar al endpoint admin
+      try {
+        if (editingCategories && Array.isArray(editingCategories)) {
+          const dto = {
+            nombre: producto.nombre,
+            descripcion: producto.descripcion,
+            precio: producto.precio ?? producto.price ?? 0,
+            activo: producto.activo ?? true,
+            categoriaIds: editingCategories,
+            imagenes: producto.imagenes || [],
+          };
+          const updated = await adminProductService.updateProduct(producto.id, dto);
+          if (updated) {
+            setProductos(p => p.map(pdt => pdt.id === producto.id ? { ...pdt, ...updated } : pdt));
+          }
+        }
+      } catch (err) {
+        console.error('Error actualizando categorías:', err);
+        show('Error actualizando categorías (no crítico)', 'warning');
+      } finally {
+        setEditingCategories([]);
+        setEditingCategoryId('');
+        setEditingProduct(null);
+      }
     } catch (err) {
       console.error(err);
       show('Error actualizando stock', 'error');
@@ -118,7 +176,33 @@ const InventoryPage = () => {
             {productos.map(prod => (
               <tr key={prod.id}>
                 <td className="flex items-center gap-3">
-                  {prod.imagenes && prod.imagenes[0] && (<img src={prod.imagenes[0]} alt={prod.nombre} className="w-12 h-12 object-contain" />)}
+                  {(() => {
+                    try {
+                      if (Array.isArray(prod.imagenes) && prod.imagenes.length > 0) return (<img src={prod.imagenes[0]} alt={prod.nombre} className="w-12 h-12 object-contain" />);
+                      if (typeof prod.imagenes === 'string' && prod.imagenes.trim().length > 0) {
+                        const raw = prod.imagenes.trim();
+                        // intentar parsear JSON
+                        if (raw.startsWith('[') || raw.startsWith('{')) {
+                          try {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed) && parsed.length > 0) return (<img src={parsed[0]} alt={prod.nombre} className="w-12 h-12 object-contain" />);
+                          } catch (e) {
+                            // ignore
+                          }
+                        }
+                        // intentar CSV
+                        if (raw.includes(',')) {
+                          const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+                          if (parts.length > 0) return (<img src={parts[0]} alt={prod.nombre} className="w-12 h-12 object-contain" />);
+                        }
+                        // fallback a la cadena completa
+                        return (<img src={raw} alt={prod.nombre} className="w-12 h-12 object-contain" />);
+                      }
+                    } catch (err) {
+                      console.error('Error procesando miniatura:', err);
+                    }
+                    return null;
+                  })()}
                   <div>
                     <div className="font-semibold">{prod.nombre}</div>
                     <div className="text-xs text-gray-600">{prod.descripcion}</div>
@@ -127,7 +211,9 @@ const InventoryPage = () => {
                 <td>{new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(prod.precio ?? prod.price ?? 0)}</td>
                 <td>
                   {editing === prod.id ? (
-                    <input type="number" value={nuevoStock} onChange={e => setNuevoStock(e.target.value)} className="input input-sm w-28" />
+                    <div className="flex flex-col">
+                      <input type="number" value={nuevoStock} onChange={e => setNuevoStock(e.target.value)} className="input input-sm w-28" />
+                    </div>
                   ) : (
                     <span>{prod.stockActual ?? prod.stock ?? 'N/A'}</span>
                   )}
@@ -140,7 +226,7 @@ const InventoryPage = () => {
                     </div>
                   ) : (
                     <div className="flex gap-2">
-                      <button className="btn btn-sm" onClick={() => startEdit(prod.id, prod.stockActual ?? prod.stock ?? 0)}>Editar Stock</button>
+                      <button className="btn btn-sm" onClick={() => startEdit(prod.id, prod.stockActual ?? prod.stock ?? 0, prod)}>Editar Stock</button>
                       <button className="btn btn-sm btn-outline" onClick={() => window.location.href = `/admin/productos/${prod.id}/editar`}>Editar Producto</button>
                     </div>
                   )}
