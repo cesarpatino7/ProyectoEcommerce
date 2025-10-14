@@ -15,6 +15,12 @@ const Navbar = () => {
     navigate("/");
   };
 
+  // Obtener el nombre a mostrar (nombre y apellido, o solo nombre, o email)
+  const displayName =
+    user?.nombre && user?.apellido
+      ? `${user.nombre} ${user.apellido}`
+      : user?.nombre || user?.apellido || user?.email || "Usuario";
+
   return (
     <header className="mb-8">
       <div className="navbar bg-base-100 px-0">
@@ -59,16 +65,35 @@ const Navbar = () => {
           {/* Dropdown del Usuario */}
           {user ? (
             <div className="dropdown dropdown-end">
-              <div tabIndex={0} role="button" className="btn btn-ghost">
-                <span className="hidden sm:inline text-gray-700">
-                  Hola,{" "}
-                  <span className="font-semibold text-blue-950">
-                    {user.email}
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-ghost btn-sm md:btn-md gap-2 hover:bg-gray-100 transition-colors"
+              >
+                {/* Ícono de usuario simple */}
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-white"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="hidden md:flex flex-col items-start">
+                  <span className="text-xs text-gray-500">Hola,</span>
+                  <span className="text-sm font-semibold text-gray-900 leading-tight">
+                    {displayName}
                   </span>
-                </span>
+                </div>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 sm:ml-2"
+                  className="h-4 w-4 text-gray-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -77,49 +102,142 @@ const Navbar = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"
+                    d="M19 9l-7 7-7-7"
                   />
                 </svg>
               </div>
               <ul
                 tabIndex={0}
-                className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+                className="menu menu-sm dropdown-content mt-3 z-[1] p-3 shadow-lg bg-white rounded-xl w-64 border border-gray-100"
               >
+                {/* Header del menú */}
+                <li className="menu-title px-3 py-2 mb-2">
+                  <div className="flex items-center gap-3">
+                    {/* Ícono de usuario en el menú */}
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-7 w-7 text-white"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 text-sm truncate">
+                        {displayName}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+                <div className="divider my-1"></div>
+
+                {/* Opciones para clientes */}
                 {user.role === "ROLE_CUSTOMER" && (
                   <>
                     <li>
-                      <Link to="/perfil">Mi Perfil</Link>
+                      <Link
+                        to="/perfil"
+                        className="hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        Mi Perfil
+                      </Link>
                     </li>
                     <li>
-                      <Link to="/mis-pedidos">Mis Pedidos</Link>
+                      <Link
+                        to="/mis-pedidos"
+                        className="hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                          />
+                        </svg>
+                        Mis Pedidos
+                      </Link>
                     </li>
                   </>
                 )}
-                {(user.role === "ROLE_PRODUCT_MANAGER" ||
-                  user.role === "ROLE_SUPER_ADMIN") && (
-                  <>
-                    <li>
-                      <Link to="/inventario">Inventario</Link>
-                    </li>
-                    <li>
-                      <Link to="/agregar-producto">Agregar Producto</Link>
-                    </li>
-                  </>
-                )}
-                {(user.role === "ROLE_ORDER_MANAGER" ||
-                  user.role === "ROLE_SUPER_ADMIN") && (
+
+                {/* Opciones para administradores - Dashboard principal */}
+                {(user.role === "ROLE_SUPER_ADMIN" ||
+                  user.role === "ROLE_ORDER_MANAGER" ||
+                  user.role === "ROLE_PRODUCT_MANAGER") && (
                   <li>
-                    <Link to="/admin/pedidos">Pedidos</Link>
+                    <Link
+                      to="/"
+                      className="hover:bg-indigo-50 rounded-lg transition-colors"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                        />
+                      </svg>
+                      Dashboard Principal
+                    </Link>
                   </li>
                 )}
-                {user.role === "ROLE_SUPER_ADMIN" && (
-                  <li>
-                    <Link to="/admin">Gestión de Usuarios</Link>
-                  </li>
-                )}
+
                 <div className="divider my-1"></div>
                 <li>
-                  <button onClick={handleLogout} className="text-red-600">
+                  <button
+                    onClick={handleLogout}
+                    className="text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                      />
+                    </svg>
                     Cerrar Sesión
                   </button>
                 </li>

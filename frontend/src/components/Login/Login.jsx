@@ -28,7 +28,8 @@ const Login = () => {
       const responseData = await authService.login(data.email, data.password);
 
       // 5. Si el login es exitoso, le pasamos el token a nuestro contexto global
-      login(responseData.token);
+      // Ahora esperamos a que se cargue el perfil completo
+      await login(responseData.token);
 
       reset();
       setMensajeExito("✅ Inicio de sesión exitoso, redirigiendo...");
@@ -36,17 +37,19 @@ const Login = () => {
       // 6. Redirigimos basándonos en el rol que está DENTRO del token
       setTimeout(() => {
         const decodedToken = jwtDecode(responseData.token);
-        // Super Admin -> /admin, Product Manager -> /agregar-producto, Order Manager -> home
-        if (decodedToken.role === "ROLE_SUPER_ADMIN") {
-          navigate("/admin");
-        } else if (decodedToken.role === "ROLE_PRODUCT_MANAGER") {
-          navigate("/agregar-producto");
-        } else if (decodedToken.role === "ROLE_ORDER_MANAGER") {
+
+        // Si es cualquier tipo de administrador, ir al Dashboard
+        if (
+          decodedToken.role === "ROLE_SUPER_ADMIN" ||
+          decodedToken.role === "ROLE_PRODUCT_MANAGER" ||
+          decodedToken.role === "ROLE_ORDER_MANAGER"
+        ) {
           navigate("/");
         } else {
+          // Si es cliente u otro rol, ir a home
           navigate("/");
         }
-      }, 1500);
+      }, 800);
     } catch (error) {
       setMensajeExito("");
       setMensajeError(`❌ ${error.message || "Credenciales inválidas"}`);
