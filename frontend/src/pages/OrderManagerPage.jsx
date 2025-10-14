@@ -83,31 +83,32 @@ const OrderManagerPage = () => {
                 <th className="border px-2 py-1">Usuario</th>
                 <th className="border px-2 py-1">Total</th>
                 <th className="border px-2 py-1">Estado</th>
-                <th className="border px-2 py-1">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {ordersPage.content.map((o) => (
-                <tr key={o.id}>
+                <tr key={o.id} className="cursor-pointer hover:bg-gray-50" onClick={() => openDetalle(o)}>
                   <td className="border px-2 py-1">{o.id}</td>
                   <td className="border px-2 py-1">{new Date(o.fechaPedido).toLocaleString()}</td>
                   <td className="border px-2 py-1">{o.nombreUsuario} ({o.emailUsuario})</td>
                   <td className="border px-2 py-1">{formatGs(o.total)}</td>
-                  <td className="border px-2 py-1">{o.estado}</td>
-                  <td className="border px-2 py-1">
+                <td className="border px-2 py-1">
+                  <div className="flex items-center gap-3">
                     <select
                       value={ESTADOS.find(s => s.descripcion === o.estado)?.id ?? ''}
                       onChange={(e) => handleChangeEstado(o.id, Number(e.target.value))}
-                      className="select select-sm max-w-xs transition-all duration-200"
+                      onClick={(e) => e.stopPropagation()}
+                      className="select select-sm max-w-xs transition-colors duration-200"
+                      aria-label={`Cambiar estado pedido ${o.id}`}
                     >
                       {ESTADOS.map((s) => (
                         <option key={s.id} value={s.id}>{s.descripcion}</option>
                       ))}
                     </select>
-                  </td>
-                  <td className="border px-2 py-1">
-                    <button className="btn btn-sm btn-ghost transform transition-transform duration-150 hover:scale-105" onClick={() => openDetalle(o)}>Detalle</button>
-                  </td>
+
+                    {/* detalle abre al click en la fila; el select usa stopPropagation para evitarlo */}
+                  </div>
+                </td>
                 </tr>
               ))}
             </tbody>

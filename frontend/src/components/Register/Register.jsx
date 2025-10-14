@@ -2,6 +2,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { authService } from "../../api/authService";
+import { useAuth } from "../../context/AuthContext";
+import { jwtDecode } from "jwt-decode";
 
 const Register = () => {
   const {
@@ -14,6 +16,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [mensajeExito, setMensajeExito] = useState("");
   const [mensajeError, setMensajeError] = useState("");
+  const { login } = useAuth();
 
   const onSubmit = async (data) => {
     try {
@@ -30,15 +33,29 @@ const Register = () => {
       // 3. Usamos nuestro servicio para hacer la llamada a la API
       await authService.register(userData);
 
+      // 4. Al registrar, hacemos login automático con las mismas credenciales
+      const responseData = await authService.login(data.email, data.password);
+
+      // 5. Guardamos el token en el contexto global (y localStorage lo maneja allí)
+      login(responseData.token);
+
       reset();
       setMensajeExito(
-        "¡Registro exitoso! Serás redirigido a la página principal en 3 segundos..."
+        "✅ Registro e inicio de sesión exitosos, redirigiendo..."
       );
 
-      // Redirigimos al usuario después de un registro exitoso
+      // Redirigimos según el rol contenido en el token (igual que en Login.jsx)
       setTimeout(() => {
-        navigate("/");
-      }, 3000);
+        const decodedToken = jwtDecode(responseData.token);
+        if (
+          decodedToken.role === "ROLE_SUPER_ADMIN" ||
+          decodedToken.role === "ROLE_ORDER_MANAGER"
+        ) {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+      }, 1200);
     } catch (error) {
       // El authService ya nos da el mensaje de error formateado (ej. "email ya existe")
       setMensajeExito("");
