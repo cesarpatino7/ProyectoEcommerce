@@ -20,7 +20,7 @@ const Navbar = () => {
     try {
       const active = document.activeElement;
       if (active && typeof active.blur === 'function') active.blur();
-    } catch (e) {
+    } catch {
       // noop
     }
   };
@@ -126,6 +126,12 @@ const Navbar = () => {
                   {(user.role === "ROLE_PRODUCT_MANAGER" || user.role === "ROLE_SUPER_ADMIN") && (
                     <li>
                       <Link to="/inventario">Inventario</Link>
+                    </li>
+                  )}
+                  {/* Enlace a Pedidos visible para Super Admin y Order Manager */}
+                  {(user.role === "ROLE_ORDER_MANAGER" || user.role === "ROLE_SUPER_ADMIN") && (
+                    <li>
+                      <Link to="/admin/pedidos">Pedidos</Link>
                     </li>
                   )}
                   {/* Enlace a Gestión de Usuarios visible solo para Super Admin */}

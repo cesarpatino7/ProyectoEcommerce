@@ -12,6 +12,7 @@ import AdminAddProduct from "../pages/AdminAddProduct";
 import InventoryPage from "../pages/InventoryPage";
 import AdminEditProduct from "../pages/AdminEditProduct";
 import CartPage from "../pages/CartPage";
+import OrderManagerPage from "../pages/OrderManagerPage";
 
 // Definimos los roles de administrador en una constante para mantenerlo limpio
 const ADMIN_ROLES = [
@@ -45,6 +46,7 @@ const AppRouter = () => {
       {/* --- Rutas Protegidas SOLO para roles de Administrador --- */}
       <Route element={<ProtectedRoute rolesPermitidos={ADMIN_ROLES} />}>
         <Route path="/admin" element={<CRUDPage />} />
+        <Route path="/admin/pedidos" element={<OrderManagerPage />} />
         {/* Aquí irían otras rutas de admin como /admin/productos */}
       </Route>
 
