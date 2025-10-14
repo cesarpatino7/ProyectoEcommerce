@@ -1,0 +1,10 @@
+.order-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem; /* Espacio entre las cards */
+  justify-content: flex-start;
+}
+
+.mis-pedidos-title {
+  margin-bottom: 2rem;
+}
