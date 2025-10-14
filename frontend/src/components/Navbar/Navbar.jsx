@@ -95,9 +95,14 @@ const Navbar = () => {
                 )}
                 {(user.role === "ROLE_PRODUCT_MANAGER" ||
                   user.role === "ROLE_SUPER_ADMIN") && (
-                  <li>
-                    <Link to="/inventario">Inventario</Link>
-                  </li>
+                  <>
+                    <li>
+                      <Link to="/inventario">Inventario</Link>
+                    </li>
+                    <li>
+                      <Link to="/agregar-producto">Agregar Producto</Link>
+                    </li>
+                  </>
                 )}
                 {(user.role === "ROLE_ORDER_MANAGER" ||
                   user.role === "ROLE_SUPER_ADMIN") && (

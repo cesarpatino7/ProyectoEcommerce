@@ -5,6 +5,7 @@ import SearchBar from "../SearchBar/SearchBar";
 import Pagination from "../Pagination/Pagination";
 import { useProducts } from "../../hooks/useProducts";
 import { productService } from "../../api/productService";
+import { useCategories } from "../../hooks/useCategories";
 
 const Home = () => {
   const DEFAULT_MAX_PRICE = 5000000;
@@ -16,6 +17,7 @@ const Home = () => {
   };
 
   const { products, isLoading, error, pageInfo, fetchProducts } = useProducts();
+  const { categories } = useCategories();
   const [mergedProducts, setMergedProducts] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
   const [currentPage, setCurrentPage] = useState(0);
@@ -77,9 +79,14 @@ const Home = () => {
         all.map(async (p) => {
           try {
             const detail = await productService.getProductById(p.id);
+            // Incluir campos de categorías que pueda devolver el detalle para que el filtrado funcione
             return {
               ...p,
               stockActual: detail.stockActual ?? detail.stock ?? p.stock,
+              // copiar posibles formatos de categorías desde el detalle
+              categoria: detail.categoria ?? p.categoria,
+              categorias: detail.categorias ?? detail.categoriaIds ?? p.categorias ?? p.categoriaIds,
+              categoriaNombre: detail.categoriaNombre ?? p.categoriaNombre,
             };
           } catch (e) {
             return p;
@@ -179,7 +186,20 @@ const Home = () => {
     }
 
     const searchTerm = (filters.searchTerm || "").trim().toLowerCase();
-    const categoryFilter = (filters.category || "").trim().toLowerCase();
+    const normalize = (s) => {
+      if (!s && s !== 0) return "";
+      return String(s)
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .replace(/\s+/g, " ");
+    };
+
+    const categoryFilterRaw = filters.category;
+    const categoryFilterList = Array.isArray(categoryFilterRaw)
+      ? categoryFilterRaw.map(s => normalize(s)).filter(Boolean)
+      : (categoryFilterRaw ? [normalize(categoryFilterRaw)] : []);
 
     return current.filter((product) => {
       const price = product.precio ?? 0;
@@ -197,17 +217,41 @@ const Home = () => {
         }
       }
 
-      if (categoryFilter) {
-        const categoriaNombre = (
-          product.categoria?.nombre ||
-          product.categoria ||
-          ""
-        )
-          .toString()
-          .toLowerCase();
-        if (!categoriaNombre.includes(categoryFilter)) {
-          return false;
-        }
+      if (categoryFilterList && categoryFilterList.length > 0) {
+        // Construir lista de nombres de categorías del producto
+        const names = [];
+        // 1) product.categoria (objeto o string)
+        try {
+          if (product.categoria) {
+            if (typeof product.categoria === 'object' && product.categoria.nombre) names.push(String(product.categoria.nombre));
+            else if (typeof product.categoria === 'string') names.push(String(product.categoria));
+          }
+
+          // 2) product.categorias puede ser array de nombres o ids, o string CSV
+          if (Array.isArray(product.categorias) && product.categorias.length > 0) {
+            if (typeof product.categorias[0] === 'string') {
+              names.push(...product.categorias.map(s => String(s)));
+            } else {
+              // array de ids -> mapear a nombres usando categories
+              const mapped = (product.categorias || []).map(id => {
+                const found = (categories || []).find(c => Number(c.id) === Number(id));
+                return found ? found.nombre : null;
+              }).filter(Boolean);
+              names.push(...mapped);
+            }
+          } else if (typeof product.categorias === 'string' && product.categorias.trim().length > 0) {
+            names.push(...product.categorias.split(',').map(s => s.trim()).filter(Boolean));
+          }
+
+          // 3) fallback otras props
+          if (product.categoriaNombre) names.push(String(product.categoriaNombre));
+          if (product.categoria_name) names.push(String(product.categoria_name));
+        } catch (e) {}
+
+        const lowerNames = names.map(n => normalize(n));
+        // si alguna de las categorías seleccionadas coincide (incluir/substr) con lowerNames, mantener el producto
+        const anyMatch = categoryFilterList.some(sel => lowerNames.some(n => n.includes(sel)));
+        if (!anyMatch) return false;
       }
 
       return true;
@@ -246,6 +290,25 @@ const Home = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+
+  // DEBUG: imprimir info útil para diagnosticar problemas de filtrado por categoría
+  // Elimina o desactiva estos logs cuando confirmemos el problema
+  useEffect(() => {
+    try {
+      const src = mergedProducts ?? products ?? [];
+      const sample = (src || []).slice(0, 6).map(p => ({
+        id: p.id,
+        nombre: p.nombre,
+        categoria: p.categoria,
+        categorias: p.categorias,
+        categoriaNombre: p.categoriaNombre,
+      }));
+      console.debug('[Home] filtroCategoria:', filters.category);
+      console.debug('[Home] muestra productos (categorias):', sample);
+    } catch (e) {
+      console.error('[Home] error al debug log', e);
+    }
+  }, [filters.category, mergedProducts, products]);
 
   return (
     <div className="container mx-auto px-4 py-8">

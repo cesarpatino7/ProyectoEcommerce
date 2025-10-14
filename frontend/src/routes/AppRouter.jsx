@@ -18,15 +18,19 @@ import CheckoutPage from "../pages/CheckoutPage";
 import OrderSuccessPage from "../pages/OrderSuccessPage";
 import StripeWrapper from "../components/StripeWrapper/StripeWrapper";
 
-// Definimos los roles de administrador en una constante para mantenerlo limpio
-const ADMIN_ROLES = ["ROLE_SUPER_ADMIN", "ROLE_ORDER_MANAGER"];
+// Definimos roles para secciones específicas
+const ROLE_SUPER_ADMIN = "ROLE_SUPER_ADMIN";
+const ROLE_ORDER_MANAGER = "ROLE_ORDER_MANAGER";
+const ROLE_PRODUCT_MANAGER = "ROLE_PRODUCT_MANAGER";
+
+// Solo super admin puede acceder a la gestión de usuarios (/admin)
+const USER_MANAGEMENT_ROLES = [ROLE_SUPER_ADMIN];
+
+// Order manager y super admin pueden ver la gestión de pedidos
+const ORDER_MANAGEMENT_ROLES = [ROLE_ORDER_MANAGER, ROLE_SUPER_ADMIN];
 
 // Roles que pueden acceder a la gestión de inventario (agregar producto)
-const INVENTORY_ROLES = [
-  // Solo el rol de encargado de inventario y super admin pueden agregar productos
-  "ROLE_PRODUCT_MANAGER",
-  "ROLE_SUPER_ADMIN",
-];
+const INVENTORY_ROLES = [ROLE_PRODUCT_MANAGER, ROLE_SUPER_ADMIN];
 
 const AppRouter = () => {
   return (
@@ -52,11 +56,14 @@ const AppRouter = () => {
         <Route path="/mis-pedidos" element={<MisPedidos />} />
         <Route path="/checkout" element={<CheckoutPage />} />
       </Route>
-      {/* --- Rutas Protegidas SOLO para roles de Administrador --- */}
-      <Route element={<ProtectedRoute rolesPermitidos={ADMIN_ROLES} />}>
+      {/* --- Rutas Protegidas para gestión de usuarios (solo Super Admin) --- */}
+      <Route element={<ProtectedRoute rolesPermitidos={USER_MANAGEMENT_ROLES} />}>
         <Route path="/admin" element={<CRUDPage />} />
+      </Route>
+
+      {/* --- Rutas Protegidas para gestión de pedidos (Order Manager y Super Admin) --- */}
+      <Route element={<ProtectedRoute rolesPermitidos={ORDER_MANAGEMENT_ROLES} />}>
         <Route path="/admin/pedidos" element={<OrderManagerPage />} />
-        {/* Aquí irían otras rutas de admin como /admin/productos */}
       </Route>
       {/* Rutas para gestión de inventario (agregar producto)*/}
       <Route element={<ProtectedRoute rolesPermitidos={INVENTORY_ROLES} />}>

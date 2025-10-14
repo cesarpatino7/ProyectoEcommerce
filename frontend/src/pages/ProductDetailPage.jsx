@@ -109,7 +109,8 @@ const ProductDetail = () => {
             return;
         }
         const quantity = Math.min(Math.max(1, qty), product.stockActual ?? qty);
-        addItem({ id: product.id, nombre: product.nombre, precio: product.precio, imagen: product.imagen }, quantity);
+            // El contexto espera (productId, quantity)
+            addItem(product.id, quantity);
         show(`Agregaste ${quantity} × ${product.nombre}`, 'success');
     };
 

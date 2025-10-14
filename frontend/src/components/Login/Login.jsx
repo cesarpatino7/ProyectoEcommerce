@@ -36,12 +36,13 @@ const Login = () => {
       // 6. Redirigimos basándonos en el rol que está DENTRO del token
       setTimeout(() => {
         const decodedToken = jwtDecode(responseData.token);
-        // ROLE_PRODUCT_MANAGER debe ir a la página principal, no al panel admin
-        if (
-          decodedToken.role === "ROLE_SUPER_ADMIN" ||
-          decodedToken.role === "ROLE_ORDER_MANAGER"
-        ) {
-          navigate("/admin"); // Redirigir a una página de admin genérica
+        // Super Admin -> /admin, Product Manager -> /agregar-producto, Order Manager -> home
+        if (decodedToken.role === "ROLE_SUPER_ADMIN") {
+          navigate("/admin");
+        } else if (decodedToken.role === "ROLE_PRODUCT_MANAGER") {
+          navigate("/agregar-producto");
+        } else if (decodedToken.role === "ROLE_ORDER_MANAGER") {
+          navigate("/");
         } else {
           navigate("/");
         }
