@@ -85,7 +85,11 @@ const Home = () => {
               stockActual: detail.stockActual ?? detail.stock ?? p.stock,
               // copiar posibles formatos de categorías desde el detalle
               categoria: detail.categoria ?? p.categoria,
-              categorias: detail.categorias ?? detail.categoriaIds ?? p.categorias ?? p.categoriaIds,
+              categorias:
+                detail.categorias ??
+                detail.categoriaIds ??
+                p.categorias ??
+                p.categoriaIds,
               categoriaNombre: detail.categoriaNombre ?? p.categoriaNombre,
             };
           } catch (e) {
@@ -198,8 +202,10 @@ const Home = () => {
 
     const categoryFilterRaw = filters.category;
     const categoryFilterList = Array.isArray(categoryFilterRaw)
-      ? categoryFilterRaw.map(s => normalize(s)).filter(Boolean)
-      : (categoryFilterRaw ? [normalize(categoryFilterRaw)] : []);
+      ? categoryFilterRaw.map((s) => normalize(s)).filter(Boolean)
+      : categoryFilterRaw
+      ? [normalize(categoryFilterRaw)]
+      : [];
 
     return current.filter((product) => {
       const price = product.precio ?? 0;
@@ -223,34 +229,58 @@ const Home = () => {
         // 1) product.categoria (objeto o string)
         try {
           if (product.categoria) {
-            if (typeof product.categoria === 'object' && product.categoria.nombre) names.push(String(product.categoria.nombre));
-            else if (typeof product.categoria === 'string') names.push(String(product.categoria));
+            if (
+              typeof product.categoria === "object" &&
+              product.categoria.nombre
+            )
+              names.push(String(product.categoria.nombre));
+            else if (typeof product.categoria === "string")
+              names.push(String(product.categoria));
           }
 
           // 2) product.categorias puede ser array de nombres o ids, o string CSV
-          if (Array.isArray(product.categorias) && product.categorias.length > 0) {
-            if (typeof product.categorias[0] === 'string') {
-              names.push(...product.categorias.map(s => String(s)));
+          if (
+            Array.isArray(product.categorias) &&
+            product.categorias.length > 0
+          ) {
+            if (typeof product.categorias[0] === "string") {
+              names.push(...product.categorias.map((s) => String(s)));
             } else {
               // array de ids -> mapear a nombres usando categories
-              const mapped = (product.categorias || []).map(id => {
-                const found = (categories || []).find(c => Number(c.id) === Number(id));
-                return found ? found.nombre : null;
-              }).filter(Boolean);
+              const mapped = (product.categorias || [])
+                .map((id) => {
+                  const found = (categories || []).find(
+                    (c) => Number(c.id) === Number(id)
+                  );
+                  return found ? found.nombre : null;
+                })
+                .filter(Boolean);
               names.push(...mapped);
             }
-          } else if (typeof product.categorias === 'string' && product.categorias.trim().length > 0) {
-            names.push(...product.categorias.split(',').map(s => s.trim()).filter(Boolean));
+          } else if (
+            typeof product.categorias === "string" &&
+            product.categorias.trim().length > 0
+          ) {
+            names.push(
+              ...product.categorias
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
+            );
           }
 
           // 3) fallback otras props
-          if (product.categoriaNombre) names.push(String(product.categoriaNombre));
-          if (product.categoria_name) names.push(String(product.categoria_name));
+          if (product.categoriaNombre)
+            names.push(String(product.categoriaNombre));
+          if (product.categoria_name)
+            names.push(String(product.categoria_name));
         } catch (e) {}
 
-        const lowerNames = names.map(n => normalize(n));
+        const lowerNames = names.map((n) => normalize(n));
         // si alguna de las categorías seleccionadas coincide (incluir/substr) con lowerNames, mantener el producto
-        const anyMatch = categoryFilterList.some(sel => lowerNames.some(n => n.includes(sel)));
+        const anyMatch = categoryFilterList.some((sel) =>
+          lowerNames.some((n) => n.includes(sel))
+        );
         if (!anyMatch) return false;
       }
 
@@ -296,87 +326,138 @@ const Home = () => {
   useEffect(() => {
     try {
       const src = mergedProducts ?? products ?? [];
-      const sample = (src || []).slice(0, 6).map(p => ({
+      const sample = (src || []).slice(0, 6).map((p) => ({
         id: p.id,
         nombre: p.nombre,
         categoria: p.categoria,
         categorias: p.categorias,
         categoriaNombre: p.categoriaNombre,
       }));
-      console.debug('[Home] filtroCategoria:', filters.category);
-      console.debug('[Home] muestra productos (categorias):', sample);
+      console.debug("[Home] filtroCategoria:", filters.category);
+      console.debug("[Home] muestra productos (categorias):", sample);
     } catch (e) {
-      console.error('[Home] error al debug log', e);
+      console.error("[Home] error al debug log", e);
     }
   }, [filters.category, mergedProducts, products]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <SearchBar onSearch={handleSearch} />
-
-      <ProductFilters
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onReset={handleResetFilters}
-        maxPrice={DEFAULT_MAX_PRICE}
-      />
-
-      {/* Indicador de carga o error (inline) */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-6 w-full">
-          <span className="loading loading-spinner loading-md"></span>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+        <div className="container mx-auto px-4 py-12">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                />
+              </svg>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Catálogo de Perfumes
+            </h1>
+            <p className="text-xl text-blue-100 mb-8">
+              Descubre nuestra exclusiva colección de fragancias premium
+            </p>
+            <SearchBar onSearch={handleSearch} />
+          </div>
         </div>
-      )}
-
-      {error && (
-        <div role="alert" className="alert alert-error my-4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>
-            Error: {error.message || "No se pudieron cargar los productos."}
-          </span>
-        </div>
-      )}
-
-      {/* carga automática de todos los productos con stock>0 al montar */}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {stockedProducts.map((product) => (
-          <ProductCard
-            key={product.id}
-            id={product.id}
-            name={product.nombre}
-            image={product.imagen}
-            price={product.precio}
-            stock={product.stockActual ?? product.stock}
-          />
-        ))}
       </div>
 
-      {stockedProducts.length === 0 && !isLoading && (
-        <div className="text-center py-8 col-span-full">
-          <p className="text-gray-600 text-lg">
-            No se encontraron productos que coincidan con los filtros.
-          </p>
-        </div>
-      )}
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        <ProductFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onReset={handleResetFilters}
+          maxPrice={DEFAULT_MAX_PRICE}
+        />
 
-      <Pagination
-        currentPage={pageInfo.number}
-        totalPages={pageInfo.totalPages}
-        onPageChange={handlePageChange}
-      />
+        {/* Indicador de carga o error (inline) */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-6 w-full">
+            <span className="loading loading-spinner loading-md"></span>
+          </div>
+        )}
+
+        {error && (
+          <div role="alert" className="alert alert-error my-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>
+              Error: {error.message || "No se pudieron cargar los productos."}
+            </span>
+          </div>
+        )}
+
+        {/* carga automática de todos los productos con stock>0 al montar */}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {stockedProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              id={product.id}
+              name={product.nombre}
+              image={product.imagen}
+              price={product.precio}
+              stock={product.stockActual ?? product.stock}
+            />
+          ))}
+        </div>
+
+        {stockedProducts.length === 0 && !isLoading && (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-10 w-10 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <p className="text-gray-600 text-lg font-medium">
+              No se encontraron productos que coincidan con los filtros.
+            </p>
+            <p className="text-gray-500 text-sm mt-2">
+              Intenta ajustar tus criterios de búsqueda
+            </p>
+          </div>
+        )}
+
+        <Pagination
+          currentPage={pageInfo.number}
+          totalPages={pageInfo.totalPages}
+          onPageChange={handlePageChange}
+        />
+      </div>
     </div>
   );
 };

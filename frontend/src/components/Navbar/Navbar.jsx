@@ -22,11 +22,14 @@ const Navbar = () => {
       : user?.nombre || user?.apellido || user?.email || "Usuario";
 
   return (
-    <header className="mb-8">
-      <div className="navbar bg-base-100 px-0">
+    <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
+      <div className="navbar bg-white container mx-auto px-4">
         <div className="flex-1">
-          <Link to="/" className="btn btn-ghost text-xl">
-            Trucho Tienda
+          <Link
+            to="/"
+            className="btn btn-ghost text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors"
+          >
+            🛍️ Trucho Tienda
           </Link>
         </div>
 

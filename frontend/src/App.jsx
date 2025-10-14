@@ -6,13 +6,13 @@ import AppRouter from "./routes/AppRouter";
 
 function App() {
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <main className="container mx-auto p-4">
+      <main>
         <AppRouter />{" "}
         {/* El enrutador se encarga de decidir qué página mostrar */}
       </main>
-    </>
+    </div>
   );
 }
 
