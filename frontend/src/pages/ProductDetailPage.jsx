@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { productService } from '../api/productService';
 import { useCart } from '../context/CartContext';
 import { useNotification } from '../context/NotificationContext';
+import { useCategories } from '../hooks/useCategories';
 
 const normalizeProduct = (p) => {
     if (!p) return null;
@@ -11,11 +12,45 @@ const normalizeProduct = (p) => {
         id: p.id ?? p.id_producto ?? p.productId,
         nombre: p.nombre ?? p.name ?? p.title ?? '',
         precio: p.precio ?? p.price ?? p.valor ?? 0,
-        imagen: (p.imagenes && p.imagenes[0]) || p.imagen || (p.imagenes && p.imagenes[0]) || '',
+        // Manejar varios formatos que pueden venir del backend:
+        // - imagenes: array de URLs
+        // - imagenes: string JSON '["url1","url2"]'
+        // - imagenes: string CSV 'url1,url2'
+        // - imagen: string con URL directa
+        imagen: (() => {
+            try {
+                if (Array.isArray(p.imagenes) && p.imagenes.length > 0) return p.imagenes[0];
+                if (typeof p.imagenes === 'string' && p.imagenes.trim().length > 0) {
+                    const raw = p.imagenes.trim();
+                    // intentar parsear JSON
+                    if (raw.startsWith('[') || raw.startsWith('{')) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+                            // si no es array, caerá al fallback
+                        } catch (e) {
+                            // no es JSON válido, seguir intentando
+                        }
+                    }
+                    // intentar CSV
+                    if (raw.includes(',')) {
+                        const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+                        if (parts.length > 0) return parts[0];
+                    }
+                    // si es una cadena simple, devolverla (puede ser una URL)
+                    return raw;
+                }
+            } catch (err) {
+                console.error('Error procesando campo imagenes:', err);
+            }
+            return p.imagen ?? '';
+        })(),
         descripcion: p.descripcion ?? p.description ?? p.desc ?? '',
         marca: p.marca ?? p.brand ?? '',
         genero: p.genero ?? p.gender ?? '',
         stockActual: p.stockActual ?? p.stock ?? 0,
+        // admitir distintas formas: lista de nombres (p.categorias) o ids (p.categoriaIds)
+        categorias: p.categorias ?? p.categoriasNombres ?? p.categoriasNames ?? (p.categoriaIds ? p.categoriaIds : []),
     };
 };
 
@@ -25,6 +60,7 @@ const ProductDetail = () => {
     const [qty, setQty] = useState(1);
     const { addItem } = useCart();
     const { show } = useNotification();
+    const { categories } = useCategories();
 
     useEffect(() => {
         const load = async () => {
@@ -86,11 +122,37 @@ const ProductDetail = () => {
 
                 <div className="bg-white p-6 rounded-lg shadow-md">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">{product.nombre}</h1>
+                    {/* Mostrar categorías como etiquetas/badges */}
+                    {(() => {
+                        // product.categorias puede ser: array de nombres, string comma-separated, o array de ids
+                        const raw = product.categorias;
+                        let names = [];
+                        if (Array.isArray(raw)) {
+                            // si los elementos son strings asumimos nombres
+                            if (raw.length === 0) names = [];
+                            else if (typeof raw[0] === 'string') names = raw;
+                            else if (typeof raw[0] === 'number') {
+                                // mapear ids a nombres usando categories (si están disponibles)
+                                names = raw.map(id => {
+                                    const found = (categories || []).find(c => Number(c.id) === Number(id));
+                                    return found ? found.nombre : String(id);
+                                });
+                            }
+                        } else if (typeof raw === 'string' && raw.trim().length > 0) {
+                            names = raw.split(',').map(s => s.trim()).filter(Boolean);
+                        }
+
+                        return names.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {names.map((c, i) => (
+                                    <span key={i} className="badge badge-outline">{c}</span>
+                                ))}
+                            </div>
+                        ) : null;
+                    })()}
                     <p className="text-2xl font-bold text-blue-900 mb-4">{formatPrice(product.precio)}</p>
 
                     <div className="mb-4">
-                        <p className="text-gray-600"><span className="font-semibold">Marca:</span> {product.marca}</p>
-                        <p className="text-gray-600"><span className="font-semibold">Género:</span> {product.genero}</p>
                         <p className="text-gray-600"><span className="font-semibold">Stock:</span> {product.stockActual ?? 0}</p>
                     </div>
 

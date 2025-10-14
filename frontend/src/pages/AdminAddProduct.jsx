@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { adminProductService } from '../api/adminProductService';
 import { useNotification } from '../context/NotificationContext';
+import { useCategories } from '../hooks/useCategories';
 
 const AdminAddProduct = () => {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [precio, setPrecio] = useState('');
-  // ya no usamos categorias por ID desde el front (será vacío)
-  const [categoriaIds] = useState(''); // mantenemos la variable pero no renderizamos input
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+  const { categories, isLoading: categoriesLoading } = useCategories();
   const [imagenFile, setImagenFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -26,6 +27,13 @@ const AdminAddProduct = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const precioNum = Number(precio);
+      if (Number.isNaN(precioNum) || precioNum < 0) {
+        show('El precio debe ser un número mayor o igual a 0', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+
       let imagenUrl = null;
       if (imagenFile) {
         imagenUrl = await adminProductService.uploadImage(imagenFile);
@@ -36,8 +44,7 @@ const AdminAddProduct = () => {
         descripcion,
         precio: Number(precio),
         activo: true,
-        // Envío un array vacío: la UI no permite seleccionar categorías aquí
-        categoriaIds: [],
+        categoriaIds: selectedCategoryIds,
         imagenes: imagenUrl ? [imagenUrl] : []
       };
 
@@ -55,8 +62,7 @@ const AdminAddProduct = () => {
 
   return (
     <div className="max-w-2xl mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-4">Agregar Producto (Modo público)</h1>
-      <p className="text-sm text-gray-600 mb-4">Esta página es visible para clientes temporalmente. Para producción se debe restringir por rol.</p>
+      <h1 className="text-2xl font-bold mb-4">Agregar Producto </h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium">Nombre</label>
@@ -70,7 +76,7 @@ const AdminAddProduct = () => {
 
         <div>
           <label className="block text-sm font-medium">Precio (PYG)</label>
-          <input value={precio} onChange={e => setPrecio(e.target.value)} className="input w-full" type="number" required />
+          <input value={precio} onChange={e => setPrecio(e.target.value)} className="input w-full" type="number" min="0" step="1" required />
         </div>
 
         <div>
@@ -92,6 +98,25 @@ const AdminAddProduct = () => {
               <p className="text-sm text-gray-600">Previsualización:</p>
               <img src={previewUrl} alt="preview" className="w-48 h-48 object-contain border" />
             </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Categorías</label>
+          {!categoriesLoading ? (
+            <div className="grid grid-cols-2 gap-2">
+              {categories.map(cat => (
+                <label key={cat.id} className="flex items-center gap-2">
+                  <input type="checkbox" value={cat.id} checked={selectedCategoryIds.includes(cat.id)} onChange={e => {
+                    const id = Number(e.target.value);
+                    setSelectedCategoryIds(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
+                  }} />
+                  <span className="text-sm">{cat.nombre}</span>
+                </label>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">Cargando categorías...</div>
           )}
         </div>
 
