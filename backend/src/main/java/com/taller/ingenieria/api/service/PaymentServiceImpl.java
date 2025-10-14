@@ -77,8 +77,8 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount(total.multiply(new BigDecimal("100")).longValue())
-                .setCurrency("usd")
+                .setAmount(total.longValue())
+                .setCurrency("pyg")
                 .putMetadata("carritoId", carritoDTO.getId().toString())
                 .putMetadata("direccionId", idDireccion.toString())
                 .setAutomaticPaymentMethods(
