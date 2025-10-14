@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import addressService from "../api/addressService";
 import { paymentService } from "../api/paymentService";
+import { userService } from "../api/userService";
 import StripeWrapper from "../components/StripeWrapper/StripeWrapper";
 import PaymentForm from "../components/PaymentForm/PaymentForm";
 import { Link } from "react-router-dom";
@@ -18,22 +19,31 @@ const CheckoutPage = () => {
   const [clientSecret, setClientSecret] = useState("");
   const [isLoading, setIsLoading] = useState(true); // Un único estado de carga
   const [error, setError] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
-    const fetchAddresses = async () => {
+    const fetchData = async () => {
       try {
-        const userAddresses = await addressService.getMyAddresses();
+        // Cargar perfil del usuario y direcciones en paralelo
+        const [profile, userAddresses] = await Promise.all([
+          userService.getMyProfile(),
+          addressService.getMyAddresses(),
+        ]);
+
+        setUserProfile(profile);
         setAddresses(userAddresses);
+
         if (userAddresses.length > 0) {
           setSelectedAddressId(userAddresses[0].id);
         }
       } catch (err) {
-        setError("No se pudieron cargar tus direcciones.");
+        setError("No se pudieron cargar tus datos.");
+        console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchAddresses();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -76,6 +86,95 @@ const CheckoutPage = () => {
         <Link to="/" className="btn btn-primary">
           Volver a la Tienda
         </Link>
+      </div>
+    );
+  }
+
+  // Verificar si el usuario no tiene teléfono
+  if (userProfile && !userProfile.telefono && !isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4">
+        <div className="card bg-base-100 shadow-xl max-w-md w-full">
+          <div className="card-body items-center text-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-16 w-16 text-warning mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+              />
+            </svg>
+            <h2 className="card-title text-2xl mb-2">
+              Falta tu número de teléfono
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Para continuar con tu compra, necesitas agregar un número de
+              teléfono en tu perfil. Esto nos permitirá contactarte sobre tu
+              pedido.
+            </p>
+            <div className="card-actions justify-center flex-col sm:flex-row gap-3 w-full">
+              <Link to="/perfil" className="btn btn-primary btn-wide">
+                Ir a Mi Perfil
+              </Link>
+              <Link to="/" className="btn btn-outline btn-wide">
+                Volver a la Tienda
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Verificar si el usuario no tiene direcciones
+  if (addresses.length === 0 && !isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4">
+        <div className="card bg-base-100 shadow-xl max-w-md w-full">
+          <div className="card-body items-center text-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-16 w-16 text-warning mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <h2 className="card-title text-2xl mb-2">
+              No tienes direcciones registradas
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Para continuar con tu compra, necesitas agregar al menos una
+              dirección de envío en tu perfil.
+            </p>
+            <div className="card-actions justify-center flex-col sm:flex-row gap-3 w-full">
+              <Link to="/perfil" className="btn btn-primary btn-wide">
+                Ir a Mi Perfil
+              </Link>
+              <Link to="/" className="btn btn-outline btn-wide">
+                Volver a la Tienda
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
