@@ -7,8 +7,10 @@ import { useProducts } from "../../hooks/useProducts";
 import { productService } from "../../api/productService";
 
 const Home = () => {
+  const DEFAULT_MAX_PRICE = 5000000;
+
   const initialFilters = {
-    priceRange: [0, 1000000],
+    priceRange: [0, DEFAULT_MAX_PRICE],
     category: "",
     searchTerm: "",
   };
@@ -252,6 +254,7 @@ const Home = () => {
         filters={filters}
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
+        maxPrice={DEFAULT_MAX_PRICE}
       />
 
       {/* Indicador de carga o error (inline) */}

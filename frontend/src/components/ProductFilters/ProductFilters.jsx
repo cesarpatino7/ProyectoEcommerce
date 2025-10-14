@@ -1,7 +1,7 @@
 import PriceRangeSlider from "../PriceRangeSlider/PriceRangeSlider";
 import { useCategories } from "../../hooks/useCategories";
 
-const ProductFilters = ({ filters, onFilterChange, onReset }) => {
+const ProductFilters = ({ filters, onFilterChange, onReset, maxPrice = 5000000 }) => {
   const { categories, isLoading, error } = useCategories();
 
   return (
@@ -30,7 +30,7 @@ const ProductFilters = ({ filters, onFilterChange, onReset }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PriceRangeSlider
           onFilterChange={onFilterChange}
-          maxPrice={5000000}
+          maxPrice={maxPrice}
           value={filters.priceRange}
         />
 
