@@ -5,6 +5,7 @@ const SearchBar = ({ onSearch }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        // Forzar búsqueda inmediata al enviar el formulario
         onSearch(searchTerm);
     };
 

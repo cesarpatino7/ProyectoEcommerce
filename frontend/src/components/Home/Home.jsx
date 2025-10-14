@@ -182,11 +182,36 @@ const Home = () => {
       return [];
     }
 
+    const searchTerm = (filters.searchTerm || "").trim().toLowerCase();
+    const categoryFilter = (filters.category || "").trim().toLowerCase();
+
     return current.filter((product) => {
-      const price = product.precio;
-      return price >= min && price <= max;
+      const price = product.precio ?? 0;
+      if (price < min || price > max) {
+        return false;
+      }
+
+      // Filtrado por término de búsqueda (nombre y descripción opcional)
+      if (searchTerm) {
+        const name = (product.nombre || "").toString().toLowerCase();
+        const descripcion = (product.descripcion || "").toString().toLowerCase();
+        if (!name.includes(searchTerm) && !descripcion.includes(searchTerm)) {
+          return false;
+        }
+      }
+
+      // Filtrado por categoría si se seleccionó
+      if (categoryFilter) {
+        // Intentamos varias formas según el shape del objeto producto
+        const categoriaNombre = (product.categoria?.nombre || product.categoria || "").toString().toLowerCase();
+        if (!categoriaNombre.includes(categoryFilter)) {
+          return false;
+        }
+      }
+
+      return true;
     });
-  }, [products, mergedProducts, filters.priceRange]);
+  }, [products, mergedProducts, filters.priceRange, filters.searchTerm, filters.category]);
 
   // Mostrar sólo productos con stock mayor a 0 en la grilla
   const stockedProducts = useMemo(() => {
@@ -216,36 +241,8 @@ const Home = () => {
     setCurrentPage(page);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-10">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div role="alert" className="alert alert-error">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="stroke-current shrink-0 h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <span>
-          Error: {error.message || "No se pudieron cargar los productos."}
-        </span>
-      </div>
-    );
-  }
+  // No retornamos temprano: mantenemos la barra de búsqueda y filtros montados
+  // para que el usuario pueda seguir escribiendo aunque la lista esté cargando o haya un error.
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -257,9 +254,37 @@ const Home = () => {
         onReset={handleResetFilters}
       />
 
+      {/* Indicador de carga o error (inline) */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-6 w-full">
+          <span className="loading loading-spinner loading-md"></span>
+        </div>
+      )}
+
+      {error && (
+        <div role="alert" className="alert alert-error my-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="stroke-current shrink-0 h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>
+            Error: {error.message || "No se pudieron cargar los productos."}
+          </span>
+        </div>
+      )}
+
       {/* carga automática de todos los productos con stock>0 al montar */}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {stockedProducts.map((product) => (
           <ProductCard
             key={product.id}
