@@ -17,7 +17,23 @@ const InventoryPage = () => {
   const data = await productService.getProducts({ page:0, size:100 });
   // productService devuelve response.data; la lista puede estar en data.content o en data directamente
   const lista = data?.content || data?.items || data || [];
-  setProductos(lista);
+  // Intentar enriquecer cada producto con su detalle (que puede incluir stockActual desde el backend)
+  try {
+    const detalles = await Promise.all(lista.map(async (p) => {
+      try {
+        const detalle = await productService.getProductById(p.id);
+        // Algunos endpoints devuelven stock en la propiedad stockActual u otros nombres; priorizamos stockActual
+        return { ...p, stockActual: detalle.stockActual ?? detalle.stock ?? p.stock };
+      } catch (e) {
+        // Si falla el detalle, devolvemos el producto tal cual
+        return p;
+      }
+    }));
+    setProductos(detalles);
+  } catch (e) {
+    // Si la enriquecimiento falla por cualquier motivo, usar la lista original
+    setProductos(lista);
+  }
       } catch (err) {
         console.error(err);
         show('Error cargando productos', 'error');
@@ -35,6 +51,7 @@ const InventoryPage = () => {
     setEditing(null);
     setNuevoStock('');
   };
+
 
   const saveStock = async (producto) => {
     try {
@@ -57,6 +74,20 @@ const InventoryPage = () => {
         setProductos(p => p.map(pdt => pdt.id === producto.id ? productoActualizado : pdt));
 
         // Emitir el producto combinado para que Home lo inserte inmediatamente
+        // Guardar en localStorage para que Home lo inyecte aunque no esté montado
+        try {
+          const stored = JSON.parse(localStorage.getItem('freshProducts') || '{}');
+          if ((productoActualizado.stockActual ?? 0) > 0) {
+            stored[productoActualizado.id] = productoActualizado;
+          } else {
+            // si quedó en 0, remover de freshProducts
+            if (stored[productoActualizado.id]) delete stored[productoActualizado.id];
+          }
+          localStorage.setItem('freshProducts', JSON.stringify(stored));
+        } catch (e) {
+          // ignore storage errors
+        }
+
         window.dispatchEvent(new CustomEvent('stockUpdated', { detail: { id: producto.id, stock: invent.stockActual, product: productoActualizado } }));
       } catch (e) {
         // Fallback: emitir sólo id/stock

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const PriceRangeSlider = ({ onFilterChange, maxPrice = 1000000, value }) => {
+const PriceRangeSlider = ({ onFilterChange, maxPrice = 5000000, value }) => {
     const [range, setRange] = useState(value || [0, maxPrice]);
 
     const formatPrice = useCallback((price) => {

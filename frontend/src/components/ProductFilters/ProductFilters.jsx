@@ -30,7 +30,7 @@ const ProductFilters = ({ filters, onFilterChange, onReset }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PriceRangeSlider
           onFilterChange={onFilterChange}
-          maxPrice={1000000}
+          maxPrice={5000000}
           value={filters.priceRange}
         />
 

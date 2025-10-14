@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import ProductCard from "../ProductCard/ProductCard";
 import ProductFilters from "../ProductFilters/ProductFilters";
 import SearchBar from "../SearchBar/SearchBar";
 import Pagination from "../Pagination/Pagination";
 import { useProducts } from "../../hooks/useProducts";
+import { productService } from "../../api/productService";
 
 const Home = () => {
   const initialFilters = {
@@ -41,6 +42,51 @@ const Home = () => {
     return () => clearTimeout(debounceFetch);
   }, [executeFetch]);
 
+  const [showAllLoading, setShowAllLoading] = useState(false);
+  const fetchedAllRef = useRef(false);
+
+  // Función para obtener todas las páginas de productos y devolver los que tienen stock>0
+  const fetchAllStocked = async () => {
+    if (showAllLoading) return;
+    setShowAllLoading(true);
+    try {
+      // Primera página para conocer totalPages y size
+      const first = await productService.getProducts({ page: 0, size: 50, sort: "nombre,asc" });
+      const totalPages = first.totalPages ?? 1;
+      const size = first.size ?? 50;
+      let all = first.content || [];
+      // obtener las páginas restantes
+      for (let p = 1; p < totalPages; p++) {
+        try {
+          const resp = await productService.getProducts({ page: p, size, sort: "nombre,asc" });
+          const items = resp.content || [];
+          all = all.concat(items);
+        } catch (e) {
+          console.error('Error fetching page', p, e);
+        }
+      }
+
+      // Enriquecer con detalle por id para asegurar stockActual
+      const enriched = await Promise.all(all.map(async (p) => {
+        try {
+          const detail = await productService.getProductById(p.id);
+          return { ...p, stockActual: detail.stockActual ?? detail.stock ?? p.stock };
+        } catch (e) {
+          return p;
+        }
+      }));
+
+      const stocked = enriched.filter(p => (p.stockActual ?? p.stock ?? 0) > 0);
+      // mostrar estos productos en la vista (sobrescribe merged view)
+      setMergedProducts(stocked);
+      fetchedAllRef.current = true;
+    } catch (err) {
+      console.error('Error fetching all products', err);
+    } finally {
+      setShowAllLoading(false);
+    }
+  };
+
   // Escuchar eventos de stock actualizado para recargar lista
   useEffect(() => {
     const onStockUpdated = (ev) => {
@@ -58,7 +104,33 @@ const Home = () => {
         } catch (e) {
           // ignore storage errors
         }
-        // executeFetch will still refresh the paginated list; we call it to keep consistency
+        // Additionally, if we've already fetched the full stocked list, merge the product into it
+        setMergedProducts(prev => {
+          try {
+            if (!prev) {
+              // If we don't have merged list yet, request full list in background
+              fetchAllStocked();
+              return prev;
+            }
+            const idx = prev.findIndex(p => p.id === prod.id);
+            // If stock > 0, insert/update; else remove
+            if ((prod.stockActual ?? prod.stock ?? 0) > 0) {
+              if (idx >= 0) {
+                const copy = [...prev]; copy[idx] = prod; return copy;
+              } else {
+                return [prod, ...prev];
+              }
+            } else {
+              if (idx >= 0) {
+                const copy = [...prev]; copy.splice(idx, 1); return copy;
+              }
+              return prev;
+            }
+          } catch (e) {
+            return prev;
+          }
+        });
+        // executeFetch will still refresh the paginated list if necessary
         executeFetch();
         return;
       }
@@ -69,6 +141,12 @@ const Home = () => {
     window.addEventListener('stockUpdated', onStockUpdated);
     return () => window.removeEventListener('stockUpdated', onStockUpdated);
   }, [executeFetch]);
+
+  // Al montar, obtener automáticamente todos los productos con stock>0
+  useEffect(() => {
+    // Si ya obtuvimos todo anteriormente no repetimos
+    if (!fetchedAllRef.current) fetchAllStocked();
+  }, []);
 
   // On products update, merge any freshProducts stored in localStorage into the current products array
   useEffect(() => {
@@ -178,6 +256,8 @@ const Home = () => {
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
       />
+
+      {/* carga automática de todos los productos con stock>0 al montar */}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {stockedProducts.map((product) => (
