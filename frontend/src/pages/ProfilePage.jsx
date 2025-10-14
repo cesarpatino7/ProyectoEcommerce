@@ -4,9 +4,11 @@ import { userService } from "../api/userService";
 import addressService from "../api/addressService";
 import ciudadesData from "../data/ciudades.json";
 import { useAuth } from "../context/AuthContext";
+import { useNotification } from "../context/NotificationContext";
 
 const ProfilePage = () => {
   const { user } = useAuth();
+  const { show } = useNotification();
   const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -115,9 +117,10 @@ const ProfilePage = () => {
       const updated = await userService.updateMyProfile(values);
       setProfile(updated);
       setEditing(false);
+      show("Perfil actualizado exitosamente", "success");
     } catch (err) {
       console.error("Error al actualizar perfil:", err);
-      alert(err.message || "No se pudo actualizar el perfil.");
+      show(err.message || "No se pudo actualizar el perfil", "error");
     }
   };
 
@@ -285,6 +288,7 @@ const ProfilePage = () => {
                         setAddresses(updated || []);
                         setAddressEditingId(null);
                         setShowAddressForm(false);
+                        show("Dirección actualizada exitosamente", "success");
                       } else {
                         await addressService.createAddress({
                           descripcionCalle: vals.descripcionCalle,
@@ -293,11 +297,16 @@ const ProfilePage = () => {
                         const updated = await addressService.getMyAddresses();
                         setAddresses(updated || []);
                         setShowAddressForm(false);
+                        show("Dirección creada exitosamente", "success");
                       }
                       resetAddress({ descripcionCalle: "", idCiudad: "" });
+                      setSelectedDepartamento("");
                     } catch (err) {
                       console.error("Error guardar dirección:", err);
-                      alert(err.message || "No se pudo guardar la dirección.");
+                      show(
+                        err.message || "No se pudo guardar la dirección",
+                        "error"
+                      );
                     }
                   })}
                   className="space-y-3"
@@ -431,20 +440,43 @@ const ProfilePage = () => {
                           </button>
                           <button
                             onClick={async () => {
+                              if (
+                                !window.confirm(
+                                  "¿Estás seguro de eliminar esta dirección?"
+                                )
+                              ) {
+                                return;
+                              }
                               try {
                                 await addressService.deleteAddress(a.id);
                                 setAddresses((prev) =>
                                   prev.filter((x) => x.id !== a.id)
                                 );
-                              } catch (err) {
-                                console.error("Error eliminar:", err);
-                                alert(
-                                  err.message ||
-                                    "No se pudo eliminar la dirección."
+                                show(
+                                  "Dirección eliminada exitosamente",
+                                  "success"
                                 );
+                              } catch (err) {
+                                console.error(
+                                  "Error al eliminar dirección:",
+                                  err
+                                );
+                                // Intentar obtener el mensaje del servidor
+                                let errorMsg =
+                                  "No se pudo eliminar la dirección";
+
+                                if (err.response?.data?.message) {
+                                  errorMsg = err.response.data.message;
+                                } else if (err.response?.data?.error) {
+                                  errorMsg = err.response.data.error;
+                                } else if (err.message) {
+                                  errorMsg = err.message;
+                                }
+
+                                show(errorMsg, "error");
                               }
                             }}
-                            className="bg-red-600 text-white py-1 px-3 rounded"
+                            className="bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700"
                           >
                             Eliminar
                           </button>

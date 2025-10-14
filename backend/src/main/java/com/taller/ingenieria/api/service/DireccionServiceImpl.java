@@ -10,6 +10,7 @@ import com.taller.ingenieria.api.repository.CiudadRepository;
 import com.taller.ingenieria.api.repository.DireccionRepository;
 import com.taller.ingenieria.api.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -79,7 +80,11 @@ public class DireccionServiceImpl implements DireccionService {
             throw new SecurityException("No tiene permiso para eliminar esta dirección.");
         }
 
-        direccionRepository.delete(direccion);
+        try {
+            direccionRepository.delete(direccion);
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("No se puede eliminar la dirección porque está siendo utilizada en uno o más pedidos.");
+        }
     }
 
     private Usuario obtenerUsuarioAutenticado() {
