@@ -47,84 +47,90 @@ const Home = () => {
   const [showAllLoading, setShowAllLoading] = useState(false);
   const fetchedAllRef = useRef(false);
 
-  // Función para obtener todas las páginas de productos y devolver los que tienen stock>0
   const fetchAllStocked = async () => {
     if (showAllLoading) return;
     setShowAllLoading(true);
     try {
-      // Primera página para conocer totalPages y size
-      const first = await productService.getProducts({ page: 0, size: 50, sort: "nombre,asc" });
+      const first = await productService.getProducts({
+        page: 0,
+        size: 50,
+        sort: "nombre,asc",
+      });
       const totalPages = first.totalPages ?? 1;
       const size = first.size ?? 50;
       let all = first.content || [];
-      // obtener las páginas restantes
       for (let p = 1; p < totalPages; p++) {
         try {
-          const resp = await productService.getProducts({ page: p, size, sort: "nombre,asc" });
+          const resp = await productService.getProducts({
+            page: p,
+            size,
+            sort: "nombre,asc",
+          });
           const items = resp.content || [];
           all = all.concat(items);
         } catch (e) {
-          console.error('Error fetching page', p, e);
+          console.error("Error fetching page", p, e);
         }
       }
 
-      // Enriquecer con detalle por id para asegurar stockActual
-      const enriched = await Promise.all(all.map(async (p) => {
-        try {
-          const detail = await productService.getProductById(p.id);
-          return { ...p, stockActual: detail.stockActual ?? detail.stock ?? p.stock };
-        } catch (e) {
-          return p;
-        }
-      }));
+      const enriched = await Promise.all(
+        all.map(async (p) => {
+          try {
+            const detail = await productService.getProductById(p.id);
+            return {
+              ...p,
+              stockActual: detail.stockActual ?? detail.stock ?? p.stock,
+            };
+          } catch (e) {
+            return p;
+          }
+        })
+      );
 
-      const stocked = enriched.filter(p => (p.stockActual ?? p.stock ?? 0) > 0);
-      // mostrar estos productos en la vista (sobrescribe merged view)
+      const stocked = enriched.filter(
+        (p) => (p.stockActual ?? p.stock ?? 0) > 0
+      );
       setMergedProducts(stocked);
       fetchedAllRef.current = true;
     } catch (err) {
-      console.error('Error fetching all products', err);
+      console.error("Error fetching all products", err);
     } finally {
       setShowAllLoading(false);
     }
   };
 
-  // Escuchar eventos de stock actualizado para recargar lista
   useEffect(() => {
     const onStockUpdated = (ev) => {
       const detail = ev?.detail;
-      // If the event carries the full product, try to merge it into current products
       if (detail && detail.product) {
         const prod = detail.product;
-        // Merge into products via fetchProducts' internal state by triggering a small local update
-        // We cannot directly mutate useProducts' state, so trigger a refetch for current page
-        // and also keep an ephemeral insert: store in localStorage a map of freshly updated products
         try {
-          const stored = JSON.parse(localStorage.getItem('freshProducts') || '{}');
+          const stored = JSON.parse(
+            localStorage.getItem("freshProducts") || "{}"
+          );
           stored[prod.id] = prod;
-          localStorage.setItem('freshProducts', JSON.stringify(stored));
-        } catch (e) {
-          // ignore storage errors
-        }
-        // Additionally, if we've already fetched the full stocked list, merge the product into it
-        setMergedProducts(prev => {
+          localStorage.setItem("freshProducts", JSON.stringify(stored));
+        } catch (e) {}
+        setMergedProducts((prev) => {
           try {
             if (!prev) {
-              // If we don't have merged list yet, request full list in background
               fetchAllStocked();
               return prev;
             }
-            const idx = prev.findIndex(p => p.id === prod.id);
-            // If stock > 0, insert/update; else remove
+            const idx = prev.findIndex((p) => p.id === prod.id);
             if ((prod.stockActual ?? prod.stock ?? 0) > 0) {
               if (idx >= 0) {
-                const copy = [...prev]; copy[idx] = prod; return copy;
+                const copy = [...prev];
+                copy[idx] = prod;
+                return copy;
               } else {
                 return [prod, ...prev];
               }
             } else {
               if (idx >= 0) {
-                const copy = [...prev]; copy.splice(idx, 1); return copy;
+                const copy = [...prev];
+                copy.splice(idx, 1);
+                return copy;
               }
               return prev;
             }
@@ -132,47 +138,35 @@ const Home = () => {
             return prev;
           }
         });
-        // executeFetch will still refresh the paginated list if necessary
         executeFetch();
         return;
       }
 
-      // Otherwise fallback to a full refetch so server-side pagination can update
       executeFetch();
     };
-    window.addEventListener('stockUpdated', onStockUpdated);
-    return () => window.removeEventListener('stockUpdated', onStockUpdated);
+    window.addEventListener("stockUpdated", onStockUpdated);
+    return () => window.removeEventListener("stockUpdated", onStockUpdated);
   }, [executeFetch]);
 
-  // Al montar, obtener automáticamente todos los productos con stock>0
   useEffect(() => {
-    // Si ya obtuvimos todo anteriormente no repetimos
     if (!fetchedAllRef.current) fetchAllStocked();
   }, []);
 
-  // On products update, merge any freshProducts stored in localStorage into the current products array
   useEffect(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem('freshProducts') || '{}');
+      const stored = JSON.parse(localStorage.getItem("freshProducts") || "{}");
       const keys = Object.keys(stored || {});
       if (!keys.length) return;
       let merged = [...products];
-      keys.forEach(k => {
+      keys.forEach((k) => {
         const fresh = stored[k];
-        // if product already exists in current page, replace it
-        const idx = merged.findIndex(p => p.id === fresh.id);
+        const idx = merged.findIndex((p) => p.id === fresh.id);
         if (idx >= 0) merged[idx] = fresh;
-        else merged.unshift(fresh); // insert at start so it's visible
+        else merged.unshift(fresh);
       });
-      // Clear the stored freshProducts after merging
-      localStorage.removeItem('freshProducts');
-      // If fetchProducts provides a setter for products, we'd use it; since products comes from hook,
-      // we rely on the hook's next fetch to align; however we can set a temporary state to show merged view
-      // To minimally impact, we store merged view in a local state used for rendering.
+      localStorage.removeItem("freshProducts");
       setMergedProducts(merged);
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -193,19 +187,24 @@ const Home = () => {
         return false;
       }
 
-      // Filtrado por término de búsqueda (nombre y descripción opcional)
       if (searchTerm) {
         const name = (product.nombre || "").toString().toLowerCase();
-        const descripcion = (product.descripcion || "").toString().toLowerCase();
+        const descripcion = (product.descripcion || "")
+          .toString()
+          .toLowerCase();
         if (!name.includes(searchTerm) && !descripcion.includes(searchTerm)) {
           return false;
         }
       }
 
-      // Filtrado por categoría si se seleccionó
       if (categoryFilter) {
-        // Intentamos varias formas según el shape del objeto producto
-        const categoriaNombre = (product.categoria?.nombre || product.categoria || "").toString().toLowerCase();
+        const categoriaNombre = (
+          product.categoria?.nombre ||
+          product.categoria ||
+          ""
+        )
+          .toString()
+          .toLowerCase();
         if (!categoriaNombre.includes(categoryFilter)) {
           return false;
         }
@@ -213,11 +212,16 @@ const Home = () => {
 
       return true;
     });
-  }, [products, mergedProducts, filters.priceRange, filters.searchTerm, filters.category]);
+  }, [
+    products,
+    mergedProducts,
+    filters.priceRange,
+    filters.searchTerm,
+    filters.category,
+  ]);
 
-  // Mostrar sólo productos con stock mayor a 0 en la grilla
   const stockedProducts = useMemo(() => {
-    return filteredProducts.filter(p => (p.stockActual ?? p.stock ?? 0) > 0);
+    return filteredProducts.filter((p) => (p.stockActual ?? p.stock ?? 0) > 0);
   }, [filteredProducts]);
 
   const handleFilterChange = (filterName, value) => {
@@ -242,9 +246,6 @@ const Home = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
-
-  // No retornamos temprano: mantenemos la barra de búsqueda y filtros montados
-  // para que el usuario pueda seguir escribiendo aunque la lista esté cargando o haya un error.
 
   return (
     <div className="container mx-auto px-4 py-8">

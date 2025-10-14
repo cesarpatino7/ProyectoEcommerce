@@ -1,71 +1,134 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { cartService } from "../api/cartService";
+import { productService } from "../api/productService"; // 1. Importamos el servicio de productos
+import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cart, setCart] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { user } = useAuth();
 
-  // Cargar del localStorage al iniciar
-  useEffect(() => {
+  const loadCart = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const raw = localStorage.getItem("cart");
-      if (raw) setCartItems(JSON.parse(raw));
-    } catch (e) {
-      console.error("No se pudo cargar el carrito desde localStorage", e);
+      const cartData = await cartService.getCart();
+
+      // --- 2. LÓGICA DE ENRIQUECIMIENTO ---
+      if (cartData && cartData.items && cartData.items.length > 0) {
+        const enrichedItems = await Promise.all(
+          cartData.items.map(async (item) => {
+            try {
+              const productDetails = await productService.getProductById(
+                item.idProducto
+              );
+              // El campo 'imagenes' es un JSON string, necesitamos parsearlo.
+              const images = JSON.parse(productDetails.imagenes || "[]");
+              return {
+                ...item,
+                imagen: images[0] || null, // Asignamos la primera imagen o null si no hay
+              };
+            } catch (productError) {
+              console.error(
+                `Error al obtener detalles del producto ${item.idProducto}:`,
+                productError
+              );
+              return { ...item, imagen: null }; // Devolvemos el item sin imagen si falla la petición
+            }
+          })
+        );
+        cartData.items = enrichedItems;
+      }
+      // --- FIN DE LA LÓGICA ---
+
+      setCart(cartData);
+    } catch (err) {
+      console.error("Error al cargar el carrito:", err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  // Persistir en localStorage cuando cambie
   useEffect(() => {
-    try {
-      localStorage.setItem("cart", JSON.stringify(cartItems));
-    } catch (e) {
-      console.error("No se pudo guardar el carrito en localStorage", e);
+    loadCart();
+  }, [user, loadCart]);
+
+  useEffect(() => {
+    if (user) {
+      cartService.removeCartId();
     }
-  }, [cartItems]);
+  }, [user]);
 
-  const addItem = (product, quantity = 1) => {
-    setCartItems((prev) => {
-      const existing = prev.find((p) => p.id === product.id);
-      if (existing) {
-        return prev.map((p) =>
-          p.id === product.id ? { ...p, quantity: p.quantity + quantity } : p
-        );
+  const handleApiCall = async (apiCall) => {
+    setIsLoading(true);
+    try {
+      await apiCall();
+
+      await loadCart();
+    } catch (err) {
+      console.error("Error en la operación del carrito:", err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addItem = (productId, quantity = 1) => {
+    handleApiCall(() => cartService.addItemToCart(productId, quantity));
+  };
+
+  const removeItem = (itemId) => {
+    handleApiCall(() => cartService.removeCartItem(itemId));
+  };
+
+  const updateQuantity = (itemId, quantity) => {
+    if (quantity < 1) {
+      removeItem(itemId);
+    } else {
+      handleApiCall(() => cartService.updateCartItem(itemId, quantity));
+    }
+  };
+
+  const clearCart = async () => {
+    if (!cart || !cart.items) return;
+    setIsLoading(true);
+    try {
+      for (const item of cart.items) {
+        await cartService.removeCartItem(item.id);
       }
-      return [...prev, { ...product, quantity }];
-    });
+      await loadCart();
+    } catch (err) {
+      console.error("Error al vaciar el carrito:", err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const removeItem = (productId) => {
-    setCartItems((prev) => prev.filter((p) => p.id !== productId));
-  };
-
-  const updateQuantity = (productId, quantity) => {
-    setCartItems((prev) =>
-      prev
-        .map((p) => (p.id === productId ? { ...p, quantity: Math.max(1, quantity) } : p))
-        .filter((p) => p.quantity > 0)
-    );
-  };
-
-  const clearCart = () => setCartItems([]);
-
-  const totalItems = cartItems.reduce((s, p) => s + p.quantity, 0);
-  const totalPrice = cartItems.reduce((s, p) => s + p.quantity * (p.precio ?? p.price ?? 0), 0);
 
   const value = {
-    cartItems,
+    cartItems: cart?.items || [],
+    totalPrice: cart?.total || 0,
+    totalItems: cart?.items?.reduce((sum, item) => sum + item.cantidad, 0) || 0,
+    isLoading,
+    error,
     addItem,
     removeItem,
     updateQuantity,
     clearCart,
-    totalItems,
-    totalPrice,
+    reloadCart: loadCart,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
 export const useCart = () => useContext(CartContext);
-
-export default CartContext;

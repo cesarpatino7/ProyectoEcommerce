@@ -6,6 +6,8 @@ import { useNotification } from "../../context/NotificationContext";
 const ProductCard = ({ id, name, image, price, stock }) => {
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
+  const { addItem } = useCart();
+  const { show: showNotification } = useNotification();
 
   const handleCardClick = (e) => {
     if (
@@ -20,18 +22,17 @@ const ProductCard = ({ id, name, image, price, stock }) => {
   const handleAddToCart = (e) => {
     e.stopPropagation();
     if ((stock ?? 0) <= 0) {
-      showNotification(`No hay stock disponible de ${name}`, 'error');
+      showNotification(`No hay stock disponible de ${name}`, "error");
       return;
     }
-    // Limitar cantidad al stock disponible
     const qty = Math.min(quantity, stock ?? quantity);
-    addItem({ id, nombre: name, precio: price, imagen: image }, qty);
+
+    // --- CAMBIO CLAVE Y ÚNICO ---
+    // Ahora llamamos a `addItem` con los parámetros que el nuevo contexto espera: productId y quantity.
+    addItem(id, qty);
+
     showNotification(`Agregaste ${qty} × ${name} al carrito`, "success");
   };
-
-  // cart
-  const { addItem } = useCart();
-  const { show: showNotification } = useNotification();
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat("es-PY", {
@@ -41,6 +42,8 @@ const ProductCard = ({ id, name, image, price, stock }) => {
     }).format(price);
   };
 
+  // El resto del JSX no necesita cambios, solo añadimos la validación en los botones de cantidad
+  // para una mejor experiencia de usuario.
   return (
     <div
       onClick={handleCardClick}
@@ -66,27 +69,33 @@ const ProductCard = ({ id, name, image, price, stock }) => {
           <button
             className="btn btn-square btn-sm btn-outline"
             onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+            disabled={(stock ?? 0) <= 0}
           >
             -
           </button>
           <input
             type="number"
             min="1"
+            max={stock}
             value={quantity}
             onChange={(e) =>
-              setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+              setQuantity(
+                Math.max(1, Math.min(stock, parseInt(e.target.value) || 1))
+              )
             }
             className="input input-bordered input-sm w-16 text-center"
+            disabled={(stock ?? 0) <= 0}
           />
           <button
             className="btn btn-square btn-sm btn-outline"
-            onClick={() => setQuantity((prev) => prev + 1)}
+            onClick={() => setQuantity((prev) => Math.min(stock, prev + 1))}
+            disabled={quantity >= stock || (stock ?? 0) <= 0}
           >
             +
           </button>
         </div>
 
-        { (stock ?? 0) > 0 ? (
+        {(stock ?? 0) > 0 ? (
           <button
             className="add-to-cart btn btn-primary btn-sm mt-2 w-full"
             onClick={handleAddToCart}
@@ -94,7 +103,9 @@ const ProductCard = ({ id, name, image, price, stock }) => {
             🛒 Agregar
           </button>
         ) : (
-          <button className="btn btn-disabled btn-sm mt-2 w-full">Sin stock</button>
+          <button className="btn btn-disabled btn-sm mt-2 w-full">
+            Sin stock
+          </button>
         )}
       </div>
     </div>
