@@ -244,7 +244,7 @@ const AdminDashboard = () => {
               </Link>
 
               <Link
-                to="/agregar-producto"
+                to="/admin/productos"
                 className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden border border-gray-100"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-orange-600/10 rounded-bl-full"></div>
@@ -261,15 +261,15 @@ const AdminDashboard = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                       />
                     </svg>
                   </div>
                   <h2 className="text-xl font-bold text-gray-800 mb-2">
-                    Agregar Producto
+                    Gestión de Productos
                   </h2>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Crear y añadir nuevos productos al catálogo
+                    Administrar catálogo completo de productos
                   </p>
                   <div className="mt-4 flex items-center text-orange-600 text-sm font-medium">
                     <span>Acceder</span>

@@ -11,6 +11,7 @@ import ProductDetailPage from "../pages/ProductDetailPage";
 import AdminAddProduct from "../pages/AdminAddProduct";
 import InventoryPage from "../pages/InventoryPage";
 import AdminEditProduct from "../pages/AdminEditProduct";
+import AdminProductsPage from "../pages/AdminProductsPage";
 import CartPage from "../pages/CartPage";
 import MisPedidos from "../components/MisPedidos/MisPedidos";
 import OrderManagerPage from "../pages/OrderManagerPage";
@@ -89,11 +90,13 @@ const AppRouter = () => {
       {/* Rutas para gestión de inventario (agregar producto)*/}
       <Route element={<ProtectedRoute rolesPermitidos={INVENTORY_ROLES} />}>
         <Route path="/agregar-producto" element={<AdminAddProduct />} />
-        <Route path="/inventario" element={<InventoryPage />} />
+        <Route path="/admin/productos" element={<AdminProductsPage />} />
+        <Route path="/admin/productos/agregar" element={<AdminAddProduct />} />
         <Route
           path="/admin/productos/:id/editar"
           element={<AdminEditProduct />}
         />
+        <Route path="/inventario" element={<InventoryPage />} />
       </Route>
       {/* --- Ruta para páginas no encontradas --- */}
       <Route path="*" element={<h1>404: Página No Encontrada</h1>} />
