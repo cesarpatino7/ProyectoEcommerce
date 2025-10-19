@@ -31,7 +31,7 @@ public class CarritoServiceImpl implements CarritoService {
     @Autowired private InventarioRepository inventarioRepository;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public CarritoResponseDTO obtenerCarrito(String cartId) {
         Carrito carrito = obtenerOCrearCarrito(cartId);
         return convertirADTO(carrito);
