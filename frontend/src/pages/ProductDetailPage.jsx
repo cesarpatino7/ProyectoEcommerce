@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { productService } from '../api/productService';
 import { useCart } from '../context/CartContext';
 import { useNotification } from '../context/NotificationContext';
 import { useCategories } from '../hooks/useCategories';
+import { useAuth } from '../context/AuthContext';
+import { ReviewSectionInline } from '../components/ReviewSection';
 
 const normalizeProduct = (p) => {
     if (!p) return null;
@@ -56,11 +58,13 @@ const normalizeProduct = (p) => {
 
 const ProductDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [product, setProduct] = useState(null);
     const [qty, setQty] = useState(1);
     const { addItem } = useCart();
     const { show } = useNotification();
     const { categories } = useCategories();
+    const { user } = useAuth();
 
     useEffect(() => {
         const load = async () => {
@@ -104,6 +108,12 @@ const ProductDetail = () => {
     const formatPrice = (price) => new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(price);
 
     const handleAddToCart = () => {
+        if (!user) {
+            show('Debes iniciar sesión para agregar productos al carrito', 'info');
+            navigate("/login");
+            return;
+        }
+        
         if ((product.stockActual ?? 0) <= 0) {
             show('No hay stock disponible', 'error');
             return;
@@ -116,7 +126,7 @@ const ProductDetail = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-md flex items-center justify-center">
                     <img src={product.imagen} alt={product.nombre} className="w-full h-auto object-contain max-h-[500px]" />
                 </div>
@@ -158,10 +168,30 @@ const ProductDetail = () => {
                     </div>
 
                     <div className="flex items-center gap-2 mb-4">
-                        <input type="number" min="1" value={qty} onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))} className="input input-bordered input-sm w-24" />
-                        <button className={`btn ${ (product.stockActual ?? 0) > 0 ? 'btn-primary' : 'btn-disabled' }`} onClick={handleAddToCart}>
-                            { (product.stockActual ?? 0) > 0 ? 'Agregar al carrito' : 'Sin stock' }
-                        </button>
+                        <input 
+                            type="number" 
+                            min="1" 
+                            value={qty} 
+                            onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))} 
+                            className="input input-bordered input-sm w-24" 
+                            disabled={(product.stockActual ?? 0) <= 0}
+                        />
+                        {user ? (
+                            <button 
+                                className={`btn ${ (product.stockActual ?? 0) > 0 ? 'btn-primary' : 'btn-disabled' }`} 
+                                onClick={handleAddToCart}
+                                disabled={(product.stockActual ?? 0) <= 0}
+                            >
+                                { (product.stockActual ?? 0) > 0 ? 'Agregar al carrito' : 'Sin stock' }
+                            </button>
+                        ) : (
+                            <button 
+                                className="btn btn-primary"
+                                onClick={handleAddToCart}
+                            >
+                                Agregar al carrito
+                            </button>
+                        )}
                     </div>
 
                     <div className="border-t pt-4">
@@ -170,6 +200,9 @@ const ProductDetail = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Sección de reseñas */}
+            <ReviewSectionInline productId={product.id} />
         </div>
     );
 };

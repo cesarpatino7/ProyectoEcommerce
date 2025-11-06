@@ -10,8 +10,9 @@ import AdminDashboard from "../pages/AdminDashboard";
 const RoleBasedHome = () => {
   const { user } = useAuth();
 
+  // Si no hay usuario logueado, mostrar el catálogo público
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <HomePage />;
   }
 
   // Si es cliente, mostrar el catálogo
@@ -28,8 +29,8 @@ const RoleBasedHome = () => {
     return <AdminDashboard />;
   }
 
-  // Fallback: redirigir a login si el rol no es reconocido
-  return <Navigate to="/login" replace />;
+  // Fallback: mostrar página principal para roles no reconocidos
+  return <HomePage />;
 };
 
 export default RoleBasedHome;

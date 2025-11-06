@@ -56,6 +56,7 @@ public class SecurityConfig {
                                 "/api/v1/carrito/**",
                                 "/api/v1/webhooks/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/resenas/**").permitAll()
                         .requestMatchers("/api/v1/admin/**", "/api/v1/me/**").authenticated()
                         .anyRequest().authenticated()
                 )

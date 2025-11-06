@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useNotification } from "../../context/NotificationContext";
+import { useAuth } from "../../context/AuthContext";
 
 const ProductCard = ({ id, name, image, price, stock }) => {
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
   const { show: showNotification } = useNotification();
+  const { user } = useAuth();
 
   const handleCardClick = (e) => {
     if (
@@ -21,6 +23,13 @@ const ProductCard = ({ id, name, image, price, stock }) => {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
+    
+    if (!user) {
+      showNotification("Debes iniciar sesión para agregar productos al carrito", "info");
+      navigate("/login");
+      return;
+    }
+    
     if ((stock ?? 0) <= 0) {
       showNotification(`No hay stock disponible de ${name}`, "error");
       return;
@@ -100,7 +109,7 @@ const ProductCard = ({ id, name, image, price, stock }) => {
             className="add-to-cart btn btn-primary btn-sm mt-2 w-full"
             onClick={handleAddToCart}
           >
-            🛒 Agregar
+            🛒 Agregar al carrito
           </button>
         ) : (
           <button className="btn btn-disabled btn-sm mt-2 w-full">

@@ -52,15 +52,15 @@ const AppRouter = () => {
       {/* --- Rutas Públicas --- */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      
+      {/* --- Página principal accesible para todos (logueados y no logueados) --- */}
+      <Route path="/" element={<RoleBasedHome />} />
+      
+      {/* --- Detalle de producto accesible para todos --- */}
+      <Route path="/product/:id" element={<ProductDetailPage />} />
 
-      {/* --- Página de inicio según el rol --- */}
-      <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<RoleBasedHome />} />
-      </Route>
-
-      {/* --- Rutas para CLIENTES (catálogo, carrito, perfil, compras) --- */}
+      {/* --- Rutas para CLIENTES (carrito, perfil, compras) --- */}
       <Route element={<ProtectedRoute rolesPermitidos={CUSTOMER_ROLES} />}>
-        <Route path="/product/:id" element={<ProductDetailPage />} />
         <Route path="/perfil" element={<ProfilePage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/mis-pedidos" element={<MisPedidos />} />
