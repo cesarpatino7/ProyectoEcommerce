@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/resenas")
+@RequestMapping("/api/v1/resenas")
 public class ResenasProductoControllerImpl implements ResenasProductoController {
 
     @Autowired
