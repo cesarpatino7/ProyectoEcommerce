@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/resenas")
@@ -31,9 +32,14 @@ public class ResenasProductoControllerImpl implements ResenasProductoController 
 
     @Override
     @PostMapping
-    public ResponseEntity<Void> publicarResena(@RequestBody ResenaRequestDTO request) {
-        service.publicarResena(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<?> publicarResena(@RequestBody ResenaRequestDTO request) {
+        try {
+            service.publicarResena(request);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(e.getReason()); // Esto se muestra en Swagger
+        }
     }
 
 }

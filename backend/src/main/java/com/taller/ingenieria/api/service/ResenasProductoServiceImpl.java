@@ -13,10 +13,13 @@ import com.taller.ingenieria.api.repository.UsuarioRepository;
 import com.taller.ingenieria.api.service.ResenasProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.CONFLICT;
 
 @Service
 public class ResenasProductoServiceImpl implements ResenasProductoService {
@@ -59,6 +62,12 @@ public class ResenasProductoServiceImpl implements ResenasProductoService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         Producto producto = productoRepository.findById(request.getIdProducto())
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        boolean yaExiste = resenaRepository.existsByIdUsuarioAndIdProducto(usuario, producto);
+        if (yaExiste) {
+            throw new ResponseStatusException(CONFLICT, "El usuario ya ha publicado una reseña para este producto.");
+        }
+
 
         Resena resena = new Resena();
         resena.setIdUsuario(usuario);
