@@ -83,7 +83,7 @@ const CheckoutPage = () => {
     return (
       <div className="text-center py-20">
         <h2 className="text-3xl font-bold mb-4">Tu carrito está vacío</h2>
-        <Link to="/" className="btn btn-primary">
+        <Link to="/" className="btn bg-blue-950 text-white hover:bg-blue-900">
           Volver a la Tienda
         </Link>
       </div>
@@ -119,7 +119,7 @@ const CheckoutPage = () => {
               pedido.
             </p>
             <div className="card-actions justify-center flex-col sm:flex-row gap-3 w-full">
-              <Link to="/perfil" className="btn btn-primary btn-wide">
+              <Link to="/perfil" className="btn bg-blue-950 text-white hover:bg-blue-900 btn-wide">
                 Ir a Mi Perfil
               </Link>
               <Link to="/" className="btn btn-outline btn-wide">
@@ -166,7 +166,7 @@ const CheckoutPage = () => {
               dirección de envío en tu perfil.
             </p>
             <div className="card-actions justify-center flex-col sm:flex-row gap-3 w-full">
-              <Link to="/perfil" className="btn btn-primary btn-wide">
+              <Link to="/perfil" className="btn bg-blue-950 text-white hover:bg-blue-900 btn-wide">
                 Ir a Mi Perfil
               </Link>
               <Link to="/" className="btn btn-outline btn-wide">

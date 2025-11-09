@@ -356,7 +356,7 @@ const InventoryPage = () => {
                       {editing === prod.id ? (
                         <div className="flex gap-2">
                           <button
-                            className="btn btn-sm btn-primary"
+                            className="btn btn-sm bg-blue-950 text-white hover:bg-blue-900"
                             onClick={() => saveStock(prod)}
                           >
                             Guardar

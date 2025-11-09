@@ -54,7 +54,7 @@ const Navbar = () => {
                     />
                   </svg>
                   {totalItems > 0 && (
-                    <span className="badge badge-sm badge-primary indicator-item">
+                    <span className="badge badge-sm bg-blue-950 text-white indicator-item">
                       {totalItems}
                     </span>
                   )}
@@ -248,7 +248,7 @@ const Navbar = () => {
             </div>
           ) : (
             <>
-              <Link to="/login" className="btn btn-primary btn-sm">
+              <Link to="/login" className="btn bg-blue-950 text-white hover:bg-blue-900 btn-sm">
                 Iniciar sesión
               </Link>
               <Link to="/register" className="btn btn-ghost btn-sm">

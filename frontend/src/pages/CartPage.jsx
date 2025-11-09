@@ -54,7 +54,7 @@ const CartPage = () => {
           <p className="text-gray-500 mb-6">
             Parece que aún no has añadido ningún producto.
           </p>
-          <Link to="/" className="btn btn-primary">
+          <Link to="/" className="btn bg-blue-950 text-white hover:bg-blue-900">
             Explorar Productos
           </Link>
         </div>
@@ -185,7 +185,7 @@ const CartPage = () => {
                 </div>
                 <div className="card-actions mt-6">
                   <button
-                    className="btn btn-primary btn-block text-base"
+                    className="btn bg-blue-950 text-white hover:bg-blue-900 btn-block text-base"
                     onClick={() => navigate("/checkout")}
                     disabled={totalItems === 0}
                   >

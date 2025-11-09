@@ -99,7 +99,7 @@ const CartModal = () => {
           </button>
           <button
             onClick={handleCheckout}
-            className="btn btn-primary btn-block"
+            className="btn bg-blue-950 text-white hover:bg-blue-900 btn-block"
             disabled={cartItems.length === 0}
           >
             Pagar

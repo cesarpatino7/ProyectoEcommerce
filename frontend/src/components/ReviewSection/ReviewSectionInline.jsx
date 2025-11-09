@@ -139,7 +139,7 @@ const ReviewSectionInline = ({ productId }) => {
           ) : !showForm ? (
             <button
               onClick={() => setShowForm(true)}
-              className="btn btn-primary"
+              className="btn bg-blue-950 text-white hover:bg-blue-900"
             >
               ✍️ Escribir una reseña
             </button>
@@ -178,7 +178,7 @@ const ReviewSectionInline = ({ productId }) => {
                   <button
                     type="submit"
                     disabled={submitting || formData.comentario.trim().length < 10}
-                    className={`btn ${submitting || formData.comentario.trim().length < 10 ? 'btn-disabled' : 'btn-primary'}`}
+                    className={`btn ${submitting || formData.comentario.trim().length < 10 ? 'btn-disabled' : 'bg-blue-950 text-white hover:bg-blue-900'}`}
                   >
                     {submitting ? 'Publicando...' : 'Publicar Reseña'}
                   </button>

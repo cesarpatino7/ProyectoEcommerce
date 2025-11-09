@@ -99,12 +99,12 @@ const OrderSuccessPage = () => {
           {status === "failed" ? (
             <button
               onClick={() => navigate("/checkout")}
-              className="btn btn-primary"
+              className="btn bg-blue-950 text-white hover:bg-blue-900"
             >
               Volver a Intentar
             </button>
           ) : (
-            <Link to="/" className="btn btn-primary">
+            <Link to="/" className="btn bg-blue-950 text-white hover:bg-blue-900">
               Volver a la Tienda
             </Link>
           )}

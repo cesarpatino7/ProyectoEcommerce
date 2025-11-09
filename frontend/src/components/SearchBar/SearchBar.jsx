@@ -9,6 +9,12 @@ const SearchBar = ({ onSearch }) => {
     onSearch(searchTerm);
   };
 
+  const handleButtonClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSearch(searchTerm);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
       <div className="relative">
@@ -20,8 +26,9 @@ const SearchBar = ({ onSearch }) => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <button
-          type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-circle btn-primary shadow-md hover:shadow-lg transition-shadow"
+          type="button"
+          onClick={handleButtonClick}
+          className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-circle bg-blue-950 text-white hover:bg-blue-900 shadow-md hover:shadow-lg transition-shadow"
           aria-label="Buscar"
         >
           <svg

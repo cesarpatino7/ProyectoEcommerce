@@ -145,7 +145,7 @@ const RegisterAdminModal = ({ onRegister, onClose }) => {
           <div className="modal-action">
             <button
               type="submit"
-              className="btn btn-primary"
+              className="btn bg-blue-950 text-white hover:bg-blue-900"
               disabled={loading || errorRoles}
             >
               Registrar

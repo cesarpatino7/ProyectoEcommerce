@@ -128,7 +128,7 @@ const CRUDPage = () => {
         <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
         <button
           onClick={() => setIsRegisterModalOpen(true)}
-          className="btn btn-primary"
+          className="btn bg-blue-950 text-white hover:bg-blue-900"
         >
           Registrar Usuario Admin
         </button>

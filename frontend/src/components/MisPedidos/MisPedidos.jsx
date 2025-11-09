@@ -61,7 +61,7 @@ const MisPedidos = () => {
                   <p>Estado: {order.estado || "-"}</p>
                   <div className="justify-end card-actions">
                     <button
-                      className="btn btn-primary"
+                      className="btn bg-blue-950 text-white hover:bg-blue-900"
                       onClick={() => handleOpenModal(order)}
                     >
                       Ver Detalles
@@ -104,7 +104,7 @@ const MisPedidos = () => {
               </div>
             </div>
             <div className="mt-6 flex justify-end">
-              <button className="btn btn-primary" onClick={handleCloseModal}>
+              <button className="btn bg-blue-950 text-white hover:bg-blue-900" onClick={handleCloseModal}>
                 Cerrar
               </button>
             </div>

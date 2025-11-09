@@ -45,7 +45,7 @@ const PaymentForm = () => {
       <button
         disabled={isLoading || !stripe || !elements}
         id="submit"
-        className="btn btn-primary btn-block mt-6 text-base"
+        className="btn bg-blue-950 text-white hover:bg-blue-900 btn-block mt-6 text-base"
       >
         <span id="button-text">
           {isLoading ? (

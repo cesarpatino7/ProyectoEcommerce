@@ -178,7 +178,7 @@ const ProductDetail = () => {
                         />
                         {user ? (
                             <button 
-                                className={`btn ${ (product.stockActual ?? 0) > 0 ? 'btn-primary' : 'btn-disabled' }`} 
+                                className={`btn ${ (product.stockActual ?? 0) > 0 ? 'bg-blue-950 text-white hover:bg-blue-900' : 'btn-disabled' }`} 
                                 onClick={handleAddToCart}
                                 disabled={(product.stockActual ?? 0) <= 0}
                             >
@@ -186,7 +186,7 @@ const ProductDetail = () => {
                             </button>
                         ) : (
                             <button 
-                                className="btn btn-primary"
+                                className="btn bg-blue-950 text-white hover:bg-blue-900"
                                 onClick={handleAddToCart}
                             >
                                 Agregar al carrito

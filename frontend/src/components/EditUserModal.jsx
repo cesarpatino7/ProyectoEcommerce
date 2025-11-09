@@ -66,7 +66,7 @@ const EditUserModal = ({ user, onUpdate, onClose }) => {
           </div>
 
           <div className="modal-action">
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn bg-blue-950 text-white hover:bg-blue-900">
               Actualizar
             </button>
             <button type="button" onClick={onClose} className="btn btn-ghost">

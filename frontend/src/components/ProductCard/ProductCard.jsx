@@ -106,7 +106,7 @@ const ProductCard = ({ id, name, image, price, stock }) => {
 
         {(stock ?? 0) > 0 ? (
           <button
-            className="add-to-cart btn btn-primary btn-sm mt-2 w-full"
+            className="add-to-cart btn bg-blue-950 text-white hover:bg-blue-900 btn-sm mt-2 w-full"
             onClick={handleAddToCart}
           >
             🛒 Agregar al carrito
