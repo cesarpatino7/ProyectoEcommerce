@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useStripe } from "@stripe/react-stripe-js";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { inventoryService } from "../api/inventoryService";
 
 const OrderSuccessPage = () => {
   const stripe = useStripe();
   const navigate = useNavigate();
   const [status, setStatus] = useState("processing"); // processing, succeeded, failed
   const [message, setMessage] = useState("Procesando tu pedido...");
-  const { clearCart } = useCart();
+  const [hasProcessedPurchase, setHasProcessedPurchase] = useState(false);
+  const { processSuccessfulPurchase } = useCart();
 
   useEffect(() => {
     if (!stripe) {
@@ -25,12 +27,35 @@ const OrderSuccessPage = () => {
       return;
     }
 
+    // Verificar si ya se procesó este payment intent
+    const processedPayments = JSON.parse(localStorage.getItem("processedPayments") || "[]");
+    if (processedPayments.includes(clientSecret)) {
+      console.log("🔄 Este pago ya fue procesado anteriormente");
+      setStatus("succeeded");
+      setMessage("¡Pago exitoso! Tu pedido ha sido confirmado.");
+      setHasProcessedPurchase(true);
+      return;
+    }
+
     stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
       switch (paymentIntent.status) {
         case "succeeded":
           setStatus("succeeded");
           setMessage("¡Pago exitoso! Tu pedido ha sido confirmado.");
-          clearCart();
+          
+          // Solo procesar la compra UNA vez
+          if (!hasProcessedPurchase && !processedPayments.includes(clientSecret)) {
+            console.log("💳 Pago exitoso detectado, procesando compra...");
+            setHasProcessedPurchase(true);
+            
+            // Marcar como procesado
+            processedPayments.push(clientSecret);
+            localStorage.setItem("processedPayments", JSON.stringify(processedPayments));
+            
+            processSuccessfulPurchase();
+          } else {
+            console.log("🔄 Compra ya procesada, omitiendo...");
+          }
           break;
         case "processing":
           setStatus("processing");
@@ -50,7 +75,7 @@ const OrderSuccessPage = () => {
           break;
       }
     });
-  }, [stripe, clearCart]);
+  }, [stripe, processSuccessfulPurchase, hasProcessedPurchase]);
 
   return (
     <div className="text-center py-20">

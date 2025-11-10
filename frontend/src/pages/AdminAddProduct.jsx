@@ -47,7 +47,7 @@ const AdminAddProduct = () => {
         nombre,
         descripcion,
         precio: Number(precio),
-        activo: true,
+        activo: false, // Producto inactivo hasta que tenga stock
         categoriaIds: selectedCategoryIds,
         imagenes: imagenUrl ? [imagenUrl] : [],
       };
@@ -57,6 +57,7 @@ const AdminAddProduct = () => {
       setNombre("");
       setDescripcion("");
       setPrecio("");
+      setSelectedCategoryIds([]);
       setImagenFile(null);
       setPreviewUrl(null);
     } catch (err) {
