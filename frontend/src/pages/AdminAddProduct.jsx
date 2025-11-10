@@ -38,6 +38,13 @@ const AdminAddProduct = () => {
         return;
       }
 
+      // Validar que se seleccionen categorías
+      if (selectedCategoryIds.length === 0) {
+        show("Debe seleccionar al menos una categoría", "error");
+        setIsSubmitting(false);
+        return;
+      }
+
       let imagenUrl = null;
       if (imagenFile) {
         imagenUrl = await adminProductService.uploadImage(imagenFile);
@@ -47,13 +54,18 @@ const AdminAddProduct = () => {
         nombre,
         descripcion,
         precio: Number(precio),
-        activo: false, // Producto inactivo hasta que tenga stock
+        activo: true, // Producto activo por defecto
         categoriaIds: selectedCategoryIds,
         imagenes: imagenUrl ? [imagenUrl] : [],
       };
 
+      console.log("🔍 DTO a enviar:", dto);
+      console.log("📦 Categorías seleccionadas:", selectedCategoryIds);
+
       await adminProductService.createProduct(dto);
       show("Producto creado correctamente", "success");
+      
+      // Limpiar campos DESPUÉS de crear el producto exitosamente
       setNombre("");
       setDescripcion("");
       setPrecio("");
@@ -275,23 +287,30 @@ const AdminAddProduct = () => {
 
             {/* Categorías */}
             <div className="space-y-4 pt-6 border-t border-gray-200">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-purple-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                  />
-                </svg>
-                Categorías
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-purple-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                    />
+                  </svg>
+                  Categorías <span className="text-red-500">*</span>
+                </h2>
+                {selectedCategoryIds.length > 0 && (
+                  <span className="text-sm bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                    {selectedCategoryIds.length} seleccionada{selectedCategoryIds.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
 
               {!categoriesLoading ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -310,11 +329,14 @@ const AdminAddProduct = () => {
                         checked={selectedCategoryIds.includes(cat.id)}
                         onChange={(e) => {
                           const id = Number(e.target.value);
-                          setSelectedCategoryIds((prev) =>
-                            prev.includes(id)
+                          console.log("🔄 Categoría seleccionada/deseleccionada:", id);
+                          setSelectedCategoryIds((prev) => {
+                            const newSelection = prev.includes(id)
                               ? prev.filter((x) => x !== id)
-                              : [...prev, id]
-                          );
+                              : [...prev, id];
+                            console.log("📋 Nueva selección de categorías:", newSelection);
+                            return newSelection;
+                          });
                         }}
                         className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                       />

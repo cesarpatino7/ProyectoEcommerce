@@ -16,9 +16,49 @@ const AdminProductsPage = () => {
   const [viewMode, setViewMode] = useState("grid"); // 'grid' o 'table'
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all"); // 'all', 'active', 'inactive'
   const [sortBy, setSortBy] = useState("name"); // 'name', 'price', 'stock'
   const [sortOrder, setSortOrder] = useState("asc"); // 'asc', 'desc'
+
+  // Función helper para obtener el valor del stock de manera robusta
+  const getStockValue = (product) => {
+    const stockFields = [product.stockActual, product.stock, product.inventario];
+    const validStocks = stockFields.map(value => {
+      if (value === null || value === undefined || value === '') return 0;
+      const num = Number(value);
+      return isNaN(num) ? 0 : num;
+    });
+    return Math.max(...validStocks);
+  };
+
+  // Función para obtener datos de stock reales desde el backend
+  const enrichProductsWithStock = async (productList) => {
+    try {
+      const enrichedProducts = await Promise.all(
+        productList.map(async (product) => {
+          try {
+            // Intentar obtener detalles del producto que incluyan stock
+            const detalle = await productService.getProductById(product.id);
+            return {
+              ...product,
+              stockActual: detalle.stockActual ?? detalle.stock ?? product.stock ?? 0,
+              stock: detalle.stock ?? product.stock ?? 0,
+            };
+          } catch (error) {
+            console.log(`No se pudo obtener stock para producto ${product.id}:`, error);
+            return {
+              ...product,
+              stockActual: 0,
+              stock: 0,
+            };
+          }
+        })
+      );
+      return enrichedProducts;
+    } catch (error) {
+      console.error("Error enriqueciendo productos con stock:", error);
+      return productList.map(p => ({ ...p, stockActual: 0, stock: 0 }));
+    }
+  };
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
@@ -56,17 +96,8 @@ const AdminProductsPage = () => {
         data = catalogData?.content || catalogData?.items || catalogData || [];
       }
 
-      // Enriquecer con detalles de inventario si es necesario
-      const enrichedProducts = await Promise.all(
-        (data || []).map(async (p) => {
-          try {
-            const detalle = await adminProductService.getProductById(p.id);
-            return { ...p, ...detalle };
-          } catch {
-            return p;
-          }
-        })
-      );
+      // Enriquecer con detalles de inventario y stock real
+      const enrichedProducts = await enrichProductsWithStock(data || []);
 
       setProducts(enrichedProducts);
     } catch (err) {
@@ -125,11 +156,9 @@ const AdminProductsPage = () => {
       });
     }
 
-    // Filtro por estado
-    if (filterStatus === "active") {
-      filtered = filtered.filter((p) => p.activo === true);
-    } else if (filterStatus === "inactive") {
-      filtered = filtered.filter((p) => p.activo === false);
+    // Filtro por stock (solo productos con stock cuando se ordena por stock)
+    if (sortBy === "stock") {
+      filtered = filtered.filter((p) => getStockValue(p) > 0);
     }
 
     // Ordenamiento
@@ -146,8 +175,8 @@ const AdminProductsPage = () => {
           compareB = b.precio || 0;
           break;
         case "stock":
-          compareA = a.stockActual ?? a.stock ?? 0;
-          compareB = b.stockActual ?? b.stock ?? 0;
+          compareA = getStockValue(a);
+          compareB = getStockValue(b);
           break;
         default:
           return 0;
@@ -342,22 +371,6 @@ const AdminProductsPage = () => {
                 ))}
               </select>
             </div>
-
-            {/* Filtro por estado */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Estado
-              </label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">Todos</option>
-                <option value="active">Activos</option>
-                <option value="inactive">Inactivos</option>
-              </select>
-            </div>
           </div>
 
           {/* Controles de vista y ordenamiento */}
@@ -467,6 +480,31 @@ const AdminProductsPage = () => {
           </div>
         </div>
 
+        {/* Indicador de filtro por stock */}
+        {sortBy === "stock" && (
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
+            <div className="flex items-center gap-2 text-purple-800">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-sm font-medium">
+                Mostrando solo productos con stock disponible.
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Contenido - Loading State */}
         {loading ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
@@ -493,11 +531,11 @@ const AdminProductsPage = () => {
               No se encontraron productos
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || filterCategory || filterStatus !== "all"
+              {searchTerm || filterCategory
                 ? "Intenta ajustar los filtros de búsqueda"
                 : "Comienza agregando tu primer producto"}
             </p>
-            {!searchTerm && !filterCategory && filterStatus === "all" && (
+            {!searchTerm && !filterCategory && (
               <button
                 onClick={() => navigate("/admin/productos/agregar")}
                 className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
@@ -534,11 +572,10 @@ const AdminProductsPage = () => {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Precio
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                      sortBy === "stock" ? "text-purple-700 bg-purple-100" : "text-gray-700"
+                    }`}>
                       Stock
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Estado
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Acciones
@@ -619,26 +656,17 @@ const AdminProductsPage = () => {
                           {formatPrice(product.precio)}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className={`px-6 py-4 ${
+                        sortBy === "stock" ? "bg-purple-50" : ""
+                      }`}>
                         <span
                           className={`font-semibold ${
-                            (product.stockActual ?? product.stock ?? 0) > 0
-                              ? "text-green-600"
+                            getStockValue(product) > 0
+                              ? sortBy === "stock" ? "text-purple-700" : "text-green-600"
                               : "text-red-600"
                           }`}
                         >
-                          {product.stockActual ?? product.stock ?? 0}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            product.activo
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {product.activo ? "Activo" : "Inactivo"}
+                          {getStockValue(product)}
                         </span>
                       </td>
                       <td className="px-6 py-4">

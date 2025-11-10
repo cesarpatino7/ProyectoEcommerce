@@ -74,21 +74,6 @@ const AdminProductCard = ({
             <p className="text-sm mt-2">Sin imagen</p>
           </div>
         )}
-
-        {/* Badge de estado */}
-        {product.activo !== undefined && (
-          <div className="absolute top-3 right-3">
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold shadow-md ${
-                product.activo
-                  ? "bg-green-500 text-white"
-                  : "bg-red-500 text-white"
-              }`}
-            >
-              {product.activo ? "Activo" : "Inactivo"}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Contenido */}
