@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { cartService } from "../api/cartService";
 import { productService } from "../api/productService"; // 1. Importamos el servicio de productos
+import { inventoryService } from "../api/inventoryService"; // Importar servicio de inventario
 import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
@@ -16,6 +17,8 @@ export const CartProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
+
+  const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
 
   const loadCart = useCallback(async () => {
     setIsLoading(true);
@@ -115,6 +118,82 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  // Nueva función para procesar una compra exitosa
+  const processSuccessfulPurchase = async () => {
+    if (isProcessingPurchase) {
+      console.log("� Ya se está procesando una compra, ignorando...");
+      return;
+    }
+    
+    setIsProcessingPurchase(true);
+    console.log("�🛒 === INICIANDO PROCESO DE COMPRA EXITOSA ===");
+    
+    if (!cart || !cart.items || cart.items.length === 0) {
+      console.log("❌ No hay items en el carrito para procesar");
+      setIsProcessingPurchase(false);
+      return;
+    }
+
+    console.log("✅ Procesando compra exitosa, reduciendo stock...");
+    console.log("📦 Items en el carrito:", cart.items);
+
+    // Guardar items en localStorage para verificación posterior
+    localStorage.setItem("ultimaCompra", JSON.stringify(cart.items));
+
+    try {
+      // En lugar de reducir stock (que ya se hizo en el backend), 
+      // solo verificar y desactivar productos sin stock
+      const resultados = await inventoryService.desactivarProductosSinStock(cart.items);
+      
+      console.log("📊 Resultados de desactivación:", resultados);
+      
+      // Verificar si hubo errores
+      const errores = resultados.filter(r => !r.success);
+      if (errores.length > 0) {
+        console.warn("⚠️ Algunos productos no pudieron procesarse:", errores);
+      }
+      
+      const exitos = resultados.filter(r => r.success);
+      console.log(`✅ Procesados exitosamente ${exitos.length} productos`);
+      
+      // Mostrar detalles de productos desactivados
+      const desactivados = exitos.filter(r => r.desactivado);
+      if (desactivados.length > 0) {
+        console.log(`🔴 Productos desactivados por stock = 0:`, desactivados.map(r => r.idProducto));
+      }
+      
+      // Emitir eventos de stock actualizado para cada producto procesado
+      exitos.forEach(resultado => {
+        if (resultado.desactivado) {
+          console.log(`📡 Emitiendo evento stockUpdated para producto desactivado ${resultado.idProducto}`);
+          window.dispatchEvent(
+            new CustomEvent("stockUpdated", {
+              detail: {
+                id: resultado.idProducto,
+                stock: 0,
+                deactivated: true,
+                source: "purchase"
+              },
+            })
+          );
+        }
+      });
+      
+      // Limpiar el carrito después de procesar
+      console.log("🧹 Limpiando carrito...");
+      await clearCart();
+      console.log("✅ Proceso de compra exitosa completado");
+      
+    } catch (error) {
+      console.error("❌ Error procesando la compra exitosa:", error);
+      // Aún así limpiar el carrito para evitar doble procesamiento
+      console.log("🧹 Limpiando carrito después del error...");
+      await clearCart();
+    } finally {
+      setIsProcessingPurchase(false);
+    }
+  };
+
   const value = {
     cartItems: cart?.items || [],
     totalPrice: cart?.total || 0,
@@ -125,6 +204,7 @@ export const CartProvider = ({ children }) => {
     removeItem,
     updateQuantity,
     clearCart,
+    processSuccessfulPurchase,
     reloadCart: loadCart,
   };
 

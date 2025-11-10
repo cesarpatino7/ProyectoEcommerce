@@ -103,17 +103,46 @@ const InventoryPage = () => {
 
   const saveStock = async (producto) => {
     try {
+      const newStock = Number(nuevoStock);
       const payload = {
-        stockActual: Number(nuevoStock),
+        stockActual: newStock,
         stockMinimo: producto.stockMinimo ?? 0,
       };
       const resp = await inventoryService.actualizarStock(producto.id, payload);
-      show("Stock actualizado", "success");
+      
+      // Determinar el estado activo basado en el stock
+      const shouldBeActive = newStock > 0;
+      
+      // Si el estado actual es diferente al que debería ser, actualizarlo
+      if (producto.activo !== shouldBeActive) {
+        try {
+          // Obtener datos completos del producto para la actualización
+          const fullProduct = await adminProductService.getProductById(producto.id);
+          
+          const updateDto = {
+            nombre: fullProduct.nombre,
+            descripcion: fullProduct.descripcion || "",
+            precio: fullProduct.precio,
+            activo: shouldBeActive,
+            categoriaIds: fullProduct.categoriaIds || [],
+            imagenes: fullProduct.imagenes || []
+          };
+          
+          await adminProductService.updateProduct(producto.id, updateDto);
+          show(`Stock actualizado. Producto ${shouldBeActive ? 'activado' : 'desactivado'} automáticamente`, "success");
+        } catch (updateError) {
+          console.error("Error al actualizar estado del producto:", updateError);
+          show("Stock actualizado, pero no se pudo cambiar el estado del producto", "warning");
+        }
+      } else {
+        show("Stock actualizado", "success");
+      }
+      
       // actualizar la lista localmente
       setProductos((p) =>
         p.map((pdt) =>
           pdt.id === producto.id
-            ? { ...pdt, stockActual: resp.data.stockActual }
+            ? { ...pdt, stockActual: resp.data.stockActual, activo: shouldBeActive }
             : pdt
         )
       );
@@ -125,6 +154,7 @@ const InventoryPage = () => {
           ...producto,
           stockActual: invent.stockActual,
           stockMinimo: invent.stockMinimo,
+          activo: shouldBeActive, // Incluir el nuevo estado activo
         };
 
         // Actualizar la lista local con el objeto combinado
