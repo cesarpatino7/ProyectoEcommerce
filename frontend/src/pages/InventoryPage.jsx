@@ -110,102 +110,37 @@ const InventoryPage = () => {
       };
       const resp = await inventoryService.actualizarStock(producto.id, payload);
       
-      // Determinar el estado activo basado en el stock
-      const shouldBeActive = newStock > 0;
-      
-      // Si el estado actual es diferente al que debería ser, actualizarlo
-      if (producto.activo !== shouldBeActive) {
-        try {
-          // Obtener datos completos del producto para la actualización
-          const fullProduct = await adminProductService.getProductById(producto.id);
-          
-          const updateDto = {
-            nombre: fullProduct.nombre,
-            descripcion: fullProduct.descripcion || "",
-            precio: fullProduct.precio,
-            activo: shouldBeActive,
-            categoriaIds: fullProduct.categoriaIds || [],
-            imagenes: fullProduct.imagenes || []
-          };
-          
-          await adminProductService.updateProduct(producto.id, updateDto);
-          show(`Stock actualizado. Producto ${shouldBeActive ? 'activado' : 'desactivado'} automáticamente`, "success");
-        } catch (updateError) {
-          console.error("Error al actualizar estado del producto:", updateError);
-          show("Stock actualizado, pero no se pudo cambiar el estado del producto", "warning");
-        }
-      } else {
-        show("Stock actualizado", "success");
-      }
+      console.log("✅ Stock actualizado correctamente:", resp.data);
+      show("Stock actualizado", "success");
       
       // actualizar la lista localmente
       setProductos((p) =>
         p.map((pdt) =>
           pdt.id === producto.id
-            ? { ...pdt, stockActual: resp.data.stockActual, activo: shouldBeActive }
+            ? { ...pdt, stockActual: resp.data.stockActual }
             : pdt
         )
       );
       cancelEdit();
-      // Construir un objeto producto actualizado usando la respuesta de inventario
-      try {
-        const invent = resp.data; // InventarioResponseDTO
-        const productoActualizado = {
-          ...producto,
-          stockActual: invent.stockActual,
-          stockMinimo: invent.stockMinimo,
-          activo: shouldBeActive, // Incluir el nuevo estado activo
-        };
+      
+      // Emitir evento para que otras páginas se actualicen
+      window.dispatchEvent(
+        new CustomEvent("stockUpdated", {
+          detail: {
+            id: producto.id,
+            stock: newStock,
+            source: "inventory_update"
+          },
+        })
+      );
 
-        // Actualizar la lista local con el objeto combinado
-        setProductos((p) =>
-          p.map((pdt) => (pdt.id === producto.id ? productoActualizado : pdt))
-        );
-
-        // Emitir el producto combinado para que Home lo inserte inmediatamente
-        // Guardar en localStorage para que Home lo inyecte aunque no esté montado
-        try {
-          const stored = JSON.parse(
-            localStorage.getItem("freshProducts") || "{}"
-          );
-          if ((productoActualizado.stockActual ?? 0) > 0) {
-            stored[productoActualizado.id] = productoActualizado;
-          } else {
-            // si quedó en 0, remover de freshProducts
-            if (stored[productoActualizado.id])
-              delete stored[productoActualizado.id];
-          }
-          localStorage.setItem("freshProducts", JSON.stringify(stored));
-        } catch (e) {
-          // ignore storage errors
-        }
-
-        window.dispatchEvent(
-          new CustomEvent("stockUpdated", {
-            detail: {
-              id: producto.id,
-              stock: invent.stockActual,
-              product: productoActualizado,
-            },
-          })
-        );
-      } catch (e) {
-        // Fallback: emitir sólo id/stock
-        try {
-          window.dispatchEvent(
-            new CustomEvent("stockUpdated", {
-              detail: { id: producto.id, stock: resp.data.stockActual },
-            })
-          );
-        } catch (e2) {}
-      }
       // Si se seleccionó categoría en la edición, enviar al endpoint admin
-      try {
-        if (
-          editingCategories &&
-          Array.isArray(editingCategories) &&
-          editingCategories.length > 0
-        ) {
+      if (
+        editingCategories &&
+        Array.isArray(editingCategories) &&
+        editingCategories.length > 0
+      ) {
+        try {
           const dto = {
             nombre: producto.nombre,
             descripcion: producto.descripcion,
@@ -225,18 +160,18 @@ const InventoryPage = () => {
               )
             );
           }
+        } catch (err) {
+          console.log("❌ Error al asignar categoría:", err);
         }
-      } catch (err) {
-        console.error("Error actualizando categorías:", err);
-        show("Error actualizando categorías (no crítico)", "warning");
-      } finally {
-        setEditingCategories([]);
-        setEditingCategoryId("");
-        setEditingProduct(null);
       }
+
     } catch (err) {
       console.error(err);
       show("Error actualizando stock", "error");
+      // Clear editing category state
+      setEditingCategories([]);
+      setEditingCategoryId("");
+      setEditingProduct(null);
     }
   };
 
