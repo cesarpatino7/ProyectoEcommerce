@@ -3,7 +3,7 @@ import { getProductReviews, createReview } from '../../api/reviewService';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 
-const ReviewSectionInline = ({ productId }) => {
+const ReviewSectionInline = ({ productId, onRatingUpdate }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -19,6 +19,17 @@ const ReviewSectionInline = ({ productId }) => {
   useEffect(() => {
     fetchReviews();
   }, [productId]);
+
+  // Calcular promedio y notificar al padre cuando cambian las reseñas
+  useEffect(() => {
+    if (reviews.length > 0 && onRatingUpdate) {
+      const sum = reviews.reduce((acc, review) => acc + review.calificacion, 0);
+      const average = sum / reviews.length;
+      onRatingUpdate(average, reviews.length);
+    } else if (reviews.length === 0 && onRatingUpdate) {
+      onRatingUpdate(0, 0);
+    }
+  }, [reviews, onRatingUpdate]);
 
   const fetchReviews = async () => {
     try {

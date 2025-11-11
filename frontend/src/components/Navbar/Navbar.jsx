@@ -111,13 +111,13 @@ const Navbar = () => {
               </div>
               <ul
                 tabIndex={0}
-                className="menu menu-sm dropdown-content mt-3 z-[1] p-3 shadow-lg bg-white rounded-xl w-64 border border-gray-100"
+                className="menu menu-sm dropdown-content mt-3 z-[1] p-3 shadow-lg bg-white rounded-xl min-w-64 max-w-sm w-max border border-gray-100"
               >
                 {/* Header del menú */}
                 <li className="menu-title px-3 py-2 mb-2">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3 w-full">
                     {/* Ícono de usuario en el menú */}
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md flex-shrink-0">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-7 w-7 text-white"
@@ -131,11 +131,11 @@ const Navbar = () => {
                         />
                       </svg>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">
+                    <div className="flex-1 min-w-0 max-w-none">
+                      <p className="font-semibold text-gray-900 text-sm break-words leading-tight">
                         {displayName}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-xs text-gray-500 break-words leading-tight mt-1">
                         {user.email}
                       </p>
                     </div>

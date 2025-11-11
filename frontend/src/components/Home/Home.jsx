@@ -421,6 +421,7 @@ const Home = () => {
               image={product.imagen}
               price={product.precio}
               stock={product.stockActual ?? product.stock}
+              rating={product.calificacionPromedio}
             />
           ))}
         </div>

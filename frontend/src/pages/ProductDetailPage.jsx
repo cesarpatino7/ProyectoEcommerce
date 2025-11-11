@@ -61,6 +61,8 @@ const ProductDetail = () => {
     const navigate = useNavigate();
     const [product, setProduct] = useState(null);
     const [qty, setQty] = useState(1);
+    const [rating, setRating] = useState(null);
+    const [reviewCount, setReviewCount] = useState(0);
     const { addItem } = useCart();
     const { show } = useNotification();
     const { categories } = useCategories();
@@ -107,6 +109,31 @@ const ProductDetail = () => {
 
     const formatPrice = (price) => new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(price);
 
+    const renderStars = (rating) => {
+        if (!rating || rating === 0) return null;
+        
+        const numRating = parseFloat(rating);
+        return (
+            <div className="flex items-center gap-2 mb-2">
+                <div className="flex">
+                    {[...Array(5)].map((_, index) => (
+                        <span
+                            key={index}
+                            className={`text-lg ${
+                                index < Math.floor(numRating) ? 'text-yellow-400' : 'text-gray-300'
+                            }`}
+                        >
+                            ★
+                        </span>
+                    ))}
+                </div>
+                <span className="text-sm text-gray-600">
+                    {numRating.toFixed(1)} ({reviewCount} reseña{reviewCount !== 1 ? 's' : ''})
+                </span>
+            </div>
+        );
+    };
+
     const handleAddToCart = () => {
         if (!user) {
             show('Debes iniciar sesión para agregar productos al carrito', 'info');
@@ -133,6 +160,9 @@ const ProductDetail = () => {
 
                 <div className="bg-white p-6 rounded-lg shadow-md">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">{product.nombre}</h1>
+                    
+                    {renderStars(rating)}
+                    
                     {/* Mostrar categorías como etiquetas/badges */}
                     {(() => {
                         // product.categorias puede ser: array de nombres, string comma-separated, o array de ids
@@ -202,7 +232,13 @@ const ProductDetail = () => {
             </div>
 
             {/* Sección de reseñas */}
-            <ReviewSectionInline productId={product.id} />
+            <ReviewSectionInline 
+                productId={product.id} 
+                onRatingUpdate={(avgRating, count) => {
+                    setRating(avgRating);
+                    setReviewCount(count);
+                }} 
+            />
         </div>
     );
 };

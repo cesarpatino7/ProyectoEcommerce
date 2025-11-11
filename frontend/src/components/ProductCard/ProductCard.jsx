@@ -4,7 +4,7 @@ import { useCart } from "../../context/CartContext";
 import { useNotification } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
 
-const ProductCard = ({ id, name, image, price, stock }) => {
+const ProductCard = ({ id, name, image, price, stock, rating }) => {
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
@@ -51,6 +51,29 @@ const ProductCard = ({ id, name, image, price, stock }) => {
     }).format(price);
   };
 
+  const renderStars = (rating) => {
+    if (!rating || rating === 0) return null;
+    
+    const numRating = parseFloat(rating);
+    return (
+      <div className="flex items-center gap-1 mt-1">
+        <div className="flex">
+          {[...Array(5)].map((_, index) => (
+            <span
+              key={index}
+              className={`text-sm ${
+                index < Math.floor(numRating) ? 'text-yellow-400' : 'text-gray-300'
+              }`}
+            >
+              ★
+            </span>
+          ))}
+        </div>
+        <span className="text-xs text-gray-500">({numRating.toFixed(1)})</span>
+      </div>
+    );
+  };
+
   // El resto del JSX no necesita cambios, solo añadimos la validación en los botones de cantidad
   // para una mejor experiencia de usuario.
   return (
@@ -69,6 +92,9 @@ const ProductCard = ({ id, name, image, price, stock }) => {
         <h2 className="card-title text-lg font-semibold text-gray-800">
           {name}
         </h2>
+        
+        {renderStars(rating)}
+        
         <p className="text-xl font-bold text-blue-900">{formatPrice(price)}</p>
 
         <div
